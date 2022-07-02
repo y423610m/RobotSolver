@@ -14,7 +14,6 @@ using namespace std;
 #include "development_commands.h"
 
 
-
 int main(){
 
     unique_ptr<RobotManager> robot_manager(new RobotManager());
