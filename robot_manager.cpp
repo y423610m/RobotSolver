@@ -38,10 +38,10 @@ void RobotManager::update(){
     vector<double> targetAngles = solver_->numericIK(vector<double>(6, 0.));
 
     vector<double> tipPose = solver_->FK(targetAngles);
-    auto tipPose_ = tipPose;
-    tipPose_[0] -= 0.25;
-    tipPose_[1] -= 0.23;
-    PS(cnt_++) EL(tipPose_)
+    // auto tipPose_ = tipPose;
+    // tipPose_[0] -= 0.25;
+    // tipPose_[1] -= 0.23;
+    // PS(cnt_++) EL(tipPose_)
 
     //gpio_->setMoterAngles(targetAngles, minAngles_, maxAngles_);
 

@@ -4,6 +4,7 @@ using namespace std;
 
 //#include <eigen3/Dense>
 #include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Geometry>
 using namespace Eigen;
 
 struct DHParam{
@@ -17,10 +18,14 @@ private:
     vector<double> minAngles_;
     vector<double> maxAngles_;
     vector<double> currentAngles_;
-    vector<DHParam> DHs;
+    vector<double> basePose_;
+    vector<DHParam> DHs_;
+
+    Matrix4d Tbase_;
+
 
     // may no be required
-    vector<Matrix4d> Ts;
+    vector<Matrix4d> Ti_;
 
     void _initSpecificParamsTemplate();
     void _initSpecificParams6dArm();

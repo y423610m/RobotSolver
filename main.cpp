@@ -20,7 +20,7 @@ int main(){
 
     while(robot_manager->checkLoop()){
         robot_manager->update();
-        //break;
+        break;
     }
 
     cout<<"program successfully ended"<<endl;
