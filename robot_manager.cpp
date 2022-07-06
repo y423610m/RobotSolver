@@ -16,9 +16,12 @@ RobotManager::RobotManager()
 
 
     //init every joints as 0
-    gpio_->setMoterAngles(vector<double>(nJoint_, 0.), minAngles_, maxAngles_);
-    this_thread::sleep_for(chrono::milliseconds(1000));
+    // gpio_->setMoterAngles(vector<double>(nJoint_, 0.), minAngles_, maxAngles_);
+    // this_thread::sleep_for(chrono::milliseconds(1000));
 
+    //test
+    vector<double> jointAngles = vector<double>(6, M_PI/1.5);
+    tipPose = solver_->FK(jointAngles);
 
     initialized_ = true;
     cout<<"RobotManager constructed"<<endl;
@@ -35,18 +38,35 @@ void RobotManager::update(){
 
     //gpio_->update();
 
-    vector<double> targetAngles = solver_->numericIK(vector<double>(6, 0.));
+    /*
+        適当な関節角度与える
+        その時の姿勢取得
+        IK後の関節角度と姿勢を確認
+    */
 
-    vector<double> tipPose = solver_->FK(targetAngles);
-    // auto tipPose_ = tipPose;
-    // tipPose_[0] -= 0.25;
-    // tipPose_[1] -= 0.23;
-    // PS(cnt_++) EL(tipPose_)
+    solver_->setCurrentAngles(vector<double>(nJoint_, 0.2));
+
+
+    solver_->numericIK(tipPose);
+    //vector<double> resultJointAngles = solver_->getCurrentAngles();
+    //vector<double> resultTipPose = solver_->FK(resultJointAngles);
+
+    // PL("----------result---------")
+    // EL(jointAngles)
+    // EL(tipPose)
+    // EL(resultJointAngles)
+    // EL(resultTipPose)
+
+    cnt_++;
+
+    return;
+
 
     //gpio_->setMoterAngles(targetAngles, minAngles_, maxAngles_);
 
 }
 
 bool RobotManager::checkLoop(){
+    if(cnt_>1000) return false;
     return true;
 }

@@ -57,7 +57,7 @@ void GPIOInterface::_servoMoter(int pin, int target){
 
 void GPIOInterface::setMoterAngles(const vector<double>& targetAngles, const vector<double>& minAngles, const vector<double>& maxAngles){
     for(int i=0;i<(int)targetAngles.size();i++){
-        int target = minTarget_ + (targetAngles[i]/180.0)*(maxTarget_ - minTarget_);
+        //int target = minTarget_ + (targetAngles[i]/180.0)*(maxTarget_ - minTarget_);
         //gpioServo(pinAssign_[i], target);
         //PS("target") PS(i) PL(target)
         //if(i==0) break;

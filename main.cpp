@@ -1,5 +1,5 @@
 /*
-g++ -Wall -pthread main.cpp  robot_manager.cpp robot_solver.cpp gpio_interface.cpp -lpigpio -lrt
+g++ -Wall -pthread main.cpp  robot_manager.cpp robot_solver.cpp gpio_interface.cpp cvt_convert_functions.cpp -lpigpio -lrt
 sudo killall pigpiod
 sudo ./a.out
 */
@@ -20,7 +20,7 @@ int main(){
 
     while(robot_manager->checkLoop()){
         robot_manager->update();
-        break;
+        //break;
     }
 
     cout<<"program successfully ended"<<endl;
