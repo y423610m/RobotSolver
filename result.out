@@ -1,0 +1,7 @@
+RobotSolver constructed
+GPIOInterface constructed
+RobotManager constructed
+program successfully ended
+RobotManager destructed
+GPIOInterface destructed
+RobotSolver desstructed

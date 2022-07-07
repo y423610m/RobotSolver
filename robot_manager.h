@@ -19,8 +19,7 @@ private:
 
     int cnt_ = 0;
 
-    //test
-    vector<double> tipPose;
+
 
 public:
     RobotManager();

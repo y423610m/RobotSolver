@@ -4,6 +4,12 @@ sudo killall pigpiod
 sudo ./a.out
 */
 
+/* TO DO
+7DOF DH初期化宣言関数
+冗長IK計算
+
+*/
+
 #include "robot_manager.h"
 
 #include <memory>
@@ -20,7 +26,7 @@ int main(){
 
     while(robot_manager->checkLoop()){
         robot_manager->update();
-        //break;
+        break;
     }
 
     cout<<"program successfully ended"<<endl;

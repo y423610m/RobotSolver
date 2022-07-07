@@ -32,6 +32,7 @@ private:
     void _initSpecificParamsTemplate();
     void _initSpecificParams6dArm();
     void _initSpecificParamsCobottaArmOnly();
+    void _initSpecificParamsCobottaArmAndTool();
     void _initCommon();
 
     //IK functions
