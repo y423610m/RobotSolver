@@ -149,8 +149,10 @@ void RobotSolver::_initCommon(){
         Ti_[i+1] = cvt::toMat44FromDH(DHs_[i+1]);
     }
 
-    // J_.resize(6, nJoint_);
-
+    //for IK calc
+    J_.resize(6, nJoint_);
+    Tfront_.resize(nJoint_+1); // base -> joint[i]
+    Tback_.resize(nJoint_+1);  // joint[i] -> base
 
 }
 
@@ -169,92 +171,59 @@ vector<double> RobotSolver::FK(const vector<double>& jointAngles){
     return tipPose;
 }
 
-vector<double> RobotSolver::_redundantIK(const vector<double>& targetPose){
-
-    /*
-        euler -> quaternion
-        X           :: x, y, z, qx, qy, qz
-    */
-    Matrix<double, 6,1> targetX = cvt::toMat61XYZEuler(targetPose);
-
-    /*
-        x = Jq
-        J[0] = { dx/dq0,  }
-        dx = f(q+h)-f(q) / h;
-    */
-    double h = 0.0001;
-    Matrix<double, 6, Dynamic> J;
-    J.resize(6, nJoint_);
-
-    int nloop = 1000;
-    for(int loop=0; loop<nloop;loop++){
-
+void RobotSolver::_calculateJ(){
         /*
             X_i+h = Tfront[i] * rotZ(angle+h) * Tback[i]
             X_i   = Tfront[i] * rotZ(angle)   * Tback[i]
         */
-        vector<Matrix4d> Tfront(nJoint_+1); // base -> joint[i]
-        vector<Matrix4d> Tback(nJoint_+1);  // joint[i] -> base
-        //for(int i=0;i<nJoint_+1;i++) PL(Ti_[i])
-        Tfront[0] = Ti_[0];
-        Tback.back() = Ti_.back();
-        for(int i=0;i<nJoint_;i++) Tfront[i+1] = Tfront[i] * cvt::toMat44RotZ(currentAngles_[i]) * Ti_[i+1];
-        for(int i=nJoint_-1;i>=0;i--) Tback[i] = Ti_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Tback[i+1];
+        Tfront_[0] = Ti_[0];
+        Tback_.back() = Ti_.back();
+        for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Ti_[i+1];
+        for(int i=nJoint_-1;i>=0;i--) Tback_[i] = Ti_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Tback_[i+1];
 
         /*
             x_i+h = T[0][i] * rotZ(angle + h) * T[i][nJoint_]
             x_i   = T[0][i] * rotZ(angle) * T[i][nJoint_]
             --->    x_i+h - x_i / h  = J[:][i];
         */
+        Matrix4d MXi  = Tfront_.back();
+        Matrix<double, 6, 1> Xi = cvt::toMat61XYZEuler(MXi);
         for(int i=0;i<nJoint_;i++){
-            Matrix4d MXih = Tfront[i]*cvt::toMat44RotZ(currentAngles_[i]+2*h)*Tback[i+1];
-            Matrix4d MXi  = Tfront[i]*cvt::toMat44RotZ(currentAngles_[i]+h)  *Tback[i+1];
+            Matrix4d MXih = Tfront_[i]*cvt::toMat44RotZ(currentAngles_[i]+h)*Tback_[i+1];
             Matrix<double, 6, 1> Xih = cvt::toMat61XYZEuler(MXih);
-            Matrix<double, 6, 1> Xi = cvt::toMat61XYZEuler(MXi);
-            for(int j=0;j<6;j++) {ES(i) ES(j) ES(Xi(j,0)) EL(Xih(j,0))}
-            // EL(i)
-            // PL(Tfront[i]*Tback[i+1])
-            
             for(int j=0;j<6;j++){
                 if(Xih(j,0) > Xi(j,0) + M_PI) Xih(j,0) -= 2.0 * M_PI;
                 if(Xih(j,0) < Xi(j,0) - M_PI) Xih(j,0) += 2.0 * M_PI;
-                J(j, i) = ( Xih(j,0) - Xi(j,0) )/h;
+                J_(j, i) = ( Xih(j,0) - Xi(j,0) )/h;
             }
-            // for(int j=0;j<6;j++) {ES(i) ES(j) ES(currentAngles_[i]) ES(Xi(j,0)) EL(Xih(j,0)) 
-            //     if(abs(Xih(j,0)-Xi(j,0))>0.5){
-            //         PL(cvt::toMat44RotZ(currentAngles_[i]+h))
-            //         PL(cvt::toMat44RotZ(currentAngles_[i]))
-            //         PL("Mx")
-            //         PL(MXih)
-            //         PL(MXi)
-            //     }
-            // }
-            //PL(J)
         }
-        // EL(J)
-        //EL(J.inverse())
+}
 
-        /*
-            dq = J-1 * dx
-        */
-        Matrix<double, 6, 1> currentX = cvt::toMat61XYZEuler(Tfront.back());
-        // EL(currentX)
+
+vector<double> RobotSolver::_redundantIK(const vector<double>& targetPose, int maxLoop){
+
+    Matrix<double, 6,1> targetX = cvt::toMat61XYZEuler(targetPose);
+
+    for(int loop=0; loop<maxLoop;loop++){
+
+        //J_
+        this->_calculateJ();
+
+        //    dq = J-1 * dx
+        Matrix<double, 6, 1> currentX = cvt::toMat61XYZEuler(Tfront_.back());
         Matrix<double, 6, 1> dX = targetX - currentX;
-        //EL(dX)
         for(int i=3;i<6;i++){
             double& val = dX(i,0);
             if(val>M_PI)  val-=2.0*M_PI;
             if(val<-M_PI) val+=2.0*M_PI;
         }
-        //EL(dX)
-        
-        Matrix<double, Dynamic, 1> dq = J.transpose()*(J*J.transpose()).inverse()* dX;
-        // EL(dq)
 
-        double limit = 0.3 * (nloop-loop)/nloop + 0.2;
+        // dq = J-1 * dx        
+        Matrix<double, Dynamic, 1> dq = J_.transpose()*(J_*J_.transpose()).inverse()* dX;
+        double limit = 0.3 * (maxLoop-loop)/maxLoop + 0.2;
         double dMax = 0.;
         for(int i=0;i<nJoint_;i++){
-            double dAngle = max(min(dq[i], limit), -limit);// * 0.1;//*180./M_PI;
+            double dAngle = max(min(dq[i], limit), -limit);
             currentAngles_[i] += dAngle;
             dMax = max(dMax, abs(dAngle));
         }
@@ -266,8 +235,8 @@ vector<double> RobotSolver::_redundantIK(const vector<double>& targetPose){
             if(currentAngles_[i]<-M_PI) currentAngles_[i] += 2.0*M_PI;
             if(currentAngles_[i]>M_PI) currentAngles_[i] -= 2.0*M_PI;
         }
-        ES(loop) EL(currentAngles_)
-        double eps = 1e-7;
+        //ES(loop) EL(currentAngles_)
+        //EL(dMax)
         if(dMax<eps) break;
     }    
 
@@ -277,89 +246,30 @@ vector<double> RobotSolver::_redundantIK(const vector<double>& targetPose){
 
 
 
-vector<double> RobotSolver::_uniqueIK(const vector<double>& targetPose){
+vector<double> RobotSolver::_uniqueIK(const vector<double>& targetPose, int maxLoop){
 
-    /*
-        euler -> quaternion
-        X           :: x, y, z, qx, qy, qz
-    */
     Matrix<double, 6,1> targetX = cvt::toMat61XYZEuler(targetPose);
-    // EL(targetPose)
-    // EL(targetX)
 
-    // vector<double> tmp = vector<double>(6,0.);
-    // Matrix<double, 6,1> actualX = cvt::toMat61XYZQuat(this->FK(tmp));
-    // EL(actualX)
+    for(int loop=0; loop<maxLoop;loop++){
 
-    /*
-        x = Jq
-        J[0] = { dx/dq0,  }
-        dx = f(q+h)-f(q) / h;
-    */
-    double h = 0.0001;
-    // PL("h?") 
-    // cin>>h;
+        //J_
+        this->_calculateJ();
 
-    int nloop = 100;
-    for(int loop=0; loop<nloop;loop++){
-
-        Matrix<double, 6, Dynamic> J;
-        J.resize(6, nJoint_);
-        /*
-            X_i+h = Tfront[i] * rotZ(angle+h) * Tback[i]
-            X_i   = Tfront[i] * rotZ(angle)   * Tback[i]
-        */
-        vector<Matrix4d> Tfront(nJoint_+1); // base -> joint[i]
-        vector<Matrix4d> Tback(nJoint_+1);  // joint[i] -> base
-        //for(int i=0;i<nJoint_+1;i++) PL(Ti_[i])
-        Tfront[0] = Ti_[0];
-        Tback.back() = Ti_.back();
-        for(int i=0;i<nJoint_;i++) Tfront[i+1] = Tfront[i] * cvt::toMat44RotZ(currentAngles_[i]) * Ti_[i+1];
-        for(int i=nJoint_-1;i>=0;i--) Tback[i] = Ti_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Tback[i+1];
-
-        /*
-            x_i+h = T[0][i] * rotZ(angle + h) * T[i][nJoint_]
-            x_i   = T[0][i] * rotZ(angle) * T[i][nJoint_]
-            --->    x_i+h - x_i / h  = J[:][i];
-        */
-        for(int i=0;i<nJoint_;i++){
-            Matrix4d MXih = Tfront[i]*cvt::toMat44RotZ(currentAngles_[i]+h)*Tback[i+1];
-            Matrix4d MXi  = Tfront[i]*cvt::toMat44RotZ(currentAngles_[i])  *Tback[i+1];
-            Matrix<double, 6, 1> Xih = cvt::toMat61XYZEuler(MXih);
-            Matrix<double, 6, 1> Xi = cvt::toMat61XYZEuler(MXi);
-            
-            for(int j=0;j<6;j++){
-                if(Xih(j,0) > Xi(j,0) + M_PI) Xih(j,0) -= 2.0 * M_PI;
-                if(Xih(j,0) < Xi(j,0) - M_PI) Xih(j,0) += 2.0 * M_PI;
-                J(j, i) = ( Xih(j,0) - Xi(j,0) )/h;
-            }
-            //for(int j=0;j<6;j++) {ES(i) ES(j) ES(Xi(j,0)) EL(Xih(j,0))}
-            //PL(J)
-        }
-        // EL(J)
-        // EL(J.inverse())
-
-        /*
-            dq = J-1 * dx
-        */
-        Matrix<double, 6, 1> currentX = cvt::toMat61XYZEuler(Tfront.back());
-        // EL(currentX)
+        //    dq = J-1 * dx
+        Matrix<double, 6, 1> currentX = cvt::toMat61XYZEuler(Tfront_.back());
         Matrix<double, 6, 1> dX = targetX - currentX;
-        //EL(dX)
         for(int i=3;i<6;i++){
             double& val = dX(i,0);
             if(val>M_PI)  val-=2.0*M_PI;
             if(val<-M_PI) val+=2.0*M_PI;
         }
-        //EL(dX)
-        
-        Matrix<double, 6, 1> dq = J.inverse() * dX;
+        Matrix<double, 6, 1> dq = J_.inverse() * dX;
 
-
-        double limit = 0.4 * (nloop-loop)/nloop + 0.2;
+        // q += dq
+        double limit = 0.4 * (maxLoop-loop)/maxLoop + 0.2;
         double dMax = 0.;
         for(int i=0;i<nJoint_;i++){
-            double dAngle = max(min(dq[i], limit), -limit);// * 0.1;//*180./M_PI;
+            double dAngle = max(min(dq[i], limit), -limit);
             currentAngles_[i] += dAngle;
             dMax = max(dMax, abs(dAngle));
         }
@@ -371,8 +281,7 @@ vector<double> RobotSolver::_uniqueIK(const vector<double>& targetPose){
             if(currentAngles_[i]<-M_PI) currentAngles_[i] += 2.0*M_PI;
             if(currentAngles_[i]>M_PI) currentAngles_[i] -= 2.0*M_PI;
         }
-        ES(loop) EL(currentAngles_)
-        double eps = 1e-7;
+        //ES(loop) EL(currentAngles_)
         if(dMax<eps) break;
     }
 
@@ -392,7 +301,7 @@ vector<double> RobotSolver::numericIK(const vector<double>& targetPose){
 
     if(nJoint_ == 6) jointAngles = this->_uniqueIK(targetPose);
 
-    if(nJoint_ > 6) jointAngles = this->_redundantIK(targetPose);
+    if(nJoint_ > 6) jointAngles = this->_redundantIK(targetPose, 1);
     // else if(nJoint_ == 6){
     // else jointAngles = this->_undeterminedIK(targetPose);
 
