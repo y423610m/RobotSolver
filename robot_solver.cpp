@@ -142,7 +142,7 @@ void RobotSolver::_initCommon(){
     // auto rot = aff.rotation();
     // auto trans = aff.translation();
     for(int i=0;i<4;i++) for(int j=0;j<4;j++) Tbase_(i,j) = aff(i,j);
-
+ 
     Ti_ = vector<Matrix4d>(nJoint_+1);
     Ti_[0] = Tbase_ * cvt::toMat44FromDH(DHs_[0]);
     for(int i=0;i<nJoint_;i++){
@@ -162,12 +162,9 @@ void RobotSolver::_initCommon(){
 vector<double> RobotSolver::FK(const vector<double>& jointAngles){
     //Tfrom base to Tip
     Matrix4d Tb2t = Ti_[0];
-    for(int i=0;i<nJoint_;i++){
-        Tb2t *= cvt::toMat44RotZ(jointAngles[i])*Ti_[i+1];
-        //EL(Tb2t)
-    }
+    // for(int i=0;i<nJoint_;i++) Tb2t *= cvt::toMat44RotZ(jointAngles[i])*Ti_[i+1];
+    for(int i=0;i<nJoint_;i++) Tb2t *= cvt::toMat44RTFromDH(jointAngles[i], DHs_[i+1]);
     vector<double> tipPose = cvt::toVecXYZEuler(Tb2t);
-    //EL(tipPose)
     return tipPose;
 }
 
@@ -178,8 +175,12 @@ void RobotSolver::_calculateJ(){
         */
         Tfront_[0] = Ti_[0];
         Tback_.back() = Ti_.back();
-        for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Ti_[i+1];
-        for(int i=nJoint_-1;i>=0;i--) Tback_[i] = Ti_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Tback_[i+1];
+        //T = T*RT
+        // for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Ti_[i+1];
+        for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RTFromDH(currentAngles_[i], DHs_[i+1]);
+        // TR * T
+        // for(int i=nJoint_-1;i>=0;i--) Tback_[i] = Ti_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Tback_[i+1];
+        for(int i=nJoint_-1;i>=0;i--) Tback_[i] = cvt::toMat44TRFromDH(DHs_[i], currentAngles_[i]) * Tback_[i+1];
 
         /*
             x_i+h = T[0][i] * rotZ(angle + h) * T[i][nJoint_]

@@ -72,6 +72,6 @@ void RobotManager::update(){
 }
 
 bool RobotManager::checkLoop(){
-    if(cnt_>10) return false;
+    if(cnt_>1000) return false;
     return true;
 }

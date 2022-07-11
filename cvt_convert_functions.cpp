@@ -80,37 +80,66 @@ namespace cvt{
         return retT;
     }
 
-    //ref http:  kuwamai hatenablog 211232
-    //arg: dJ->jointAngle
-    Matrix4d toMat44FromDH(const DHParam& dh, const double& jointAngle){
+
+
+
+
+
+    Matrix4d toMat44FromDH(const DHParam& dh){
+        //ref http:  kuwamai hatenablog 211232
+        //arg: dJ->jointAngle        
         double a = dh.a;
         double alp = dh.alp;
         double d = dh.d;
         double tht = dh.tht;
-        // alp = alp * M_PI / 180.;
-        // tht = tht * M_PI / 180.;
+        double ca = cos(alp), sa = sin(alp);
+        double ct = cos(tht), st = sin(tht);
+
+        Matrix4d retT;
+        retT<<
+            ct,    -st,    0.,     a,
+            ca*st, ca*ct, -sa, -sa*d,
+            sa*st, sa*ct,  ca,  ca*d,
+            0.,     0.,     0.,     1.;
+        
+        return retT;
+    }
+
+    Matrix4d toMat44TRFromDH(const DHParam& dh, const double& jointAngle){
+        double a = dh.a;
+        double alp = dh.alp;
+        double d = dh.d;
+        double tht = dh.tht;
+        tht += jointAngle;
+        double ca = cos(alp), sa = sin(alp);
+        double ct = cos(tht), st = sin(tht);
+
+        Matrix4d retT;
+        retT<<
+            ct,    -st,    0.,     a,
+            ca*st, ca*ct, -sa, -sa*d,
+            sa*st, sa*ct,  ca,  ca*d,
+            0.,     0.,     0.,     1.;
+        
+        return retT;
+    }
+
+    Matrix4d toMat44RTFromDH(const double& jointAngle, const DHParam& dh){
+        double a = dh.a;
+        double alp = dh.alp;
+        double d = dh.d;
+        double tht = dh.tht;
         double ca = cos(alp), sa = sin(alp);
         double ct = cos(tht), st = sin(tht);
         double ja = jointAngle;
-        // jointAngle = jointAngle * M_PI / 180.;
         double cj = cos(ja), sj = sin(ja);
 
         Matrix4d retT;
-        // if(jointAngle ==0.)
-        //     retT<<
-        //         ct,    -st,    0.,     a,
-        //         ca*st, ca*ct, -sa, -sa*d,
-        //         sa*st, sa*ct,  ca,  ca*d,
-        //         0.,     0.,     0.,     1.;
-
-        // else
-            retT<<
-                cj*ct-sj*ca*st, -cj*st-sj*ca*ct, sj*sa,  a*cj+d*sj*sa,
-                sj*ct+cj*ca*st, -sj*st+cj*ca*ct, -cj*sa, a*sj-d*cj*sa,
-                sa*st,          sa*ct,           ca,     d*ca,
-                0.,             0.,              0.,      1.;
-
-        //if(jointAngle)
+        retT<<
+            cj*ct-sj*ca*st, -cj*st-sj*ca*ct, sj*sa,  a*cj+d*sj*sa,
+            sj*ct+cj*ca*st, -sj*st+cj*ca*ct, -cj*sa, a*sj-d*cj*sa,
+            sa*st,          sa*ct,           ca,     d*ca,
+            0.,             0.,              0.,      1.;
         
         return retT;
     }

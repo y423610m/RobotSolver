@@ -10,6 +10,7 @@ namespace cvt{
 
     Matrix<double, 6, 1> toMat61XYZQuat(const vector<double>& targetPose);
     Matrix<double, 6, 1> toMat61XYZQuat(const Matrix4d& tipPose);
+
     Matrix<double, 6, 1> toMat61XYZEuler(const vector<double>& targetPose);
     Matrix<double, 6, 1> toMat61XYZEuler(const Matrix4d& tipPose);
 
@@ -17,7 +18,9 @@ namespace cvt{
 
     Matrix4d toMat44RotZ(const double& angle);
 
-    Matrix4d toMat44FromDH(const DHParam& dh, const double& jointAngle=0.);
+    Matrix4d toMat44FromDH(const DHParam& dh);
+    Matrix4d toMat44TRFromDH(const DHParam& dh, const double& jointAngle);
+    Matrix4d toMat44RTFromDH(const double& jointAngle, const DHParam& dh);
 
 
 }
