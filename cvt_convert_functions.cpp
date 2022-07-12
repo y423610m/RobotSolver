@@ -71,7 +71,6 @@ namespace cvt{
     }
 
 
-
     Matrix4d toMat44RotZ(const double& angle){
         //TO DO :: reduce calculation
         Affine3d aff = Translation<double,3>(0.,0.,0.) * AngleAxisd(angle, Vector3d::UnitZ());
@@ -79,10 +78,6 @@ namespace cvt{
         for(int i=0;i<4;i++) for(int j=0;j<4;j++) retT(i,j) = aff(i,j);
         return retT;
     }
-
-
-
-
 
 
     Matrix4d toMat44FromDH(const DHParam& dh){

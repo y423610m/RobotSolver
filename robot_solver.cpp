@@ -68,8 +68,6 @@ void RobotSolver::_initSpecificParams6dArm(){
     assert((int)DHs_.size() == nJoint_+1);
 }
 
-
-
 void RobotSolver::_initSpecificParamsCobottaArmOnly(){
     nJoint_ = 6;
     //moters' Range [deg]
@@ -95,7 +93,6 @@ void RobotSolver::_initSpecificParamsCobottaArmOnly(){
     //DHs_.size() == nJoint + tipPose
     assert((int)DHs_.size() == nJoint_+1);
 }
-
 
 void RobotSolver::_initSpecificParamsCobottaArmAndTool(){
     nJoint_ = 7;
@@ -124,9 +121,9 @@ void RobotSolver::_initSpecificParamsCobottaArmAndTool(){
     assert((int)DHs_.size() == nJoint_+1);
 }
 
-
 // applied for any robot
 void RobotSolver::_initCommon(){
+
     // deg -> rad
     for(int i=0;i<nJoint_;i++) minAngles_[i] *= M_PI/180.;
     for(int i=0;i<nJoint_;i++) maxAngles_[i] *= M_PI/180.;
@@ -169,35 +166,35 @@ vector<double> RobotSolver::FK(const vector<double>& jointAngles){
 }
 
 void RobotSolver::_calculateJ(){
-        /*
-            X_i+h = Tfront[i] * rotZ(angle+h) * Tback[i]
-            X_i   = Tfront[i] * rotZ(angle)   * Tback[i]
-        */
-        Tfront_[0] = Ti_[0];
-        Tback_.back() = Ti_.back();
-        //T = T*RT
-        // for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Ti_[i+1];
-        for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RTFromDH(currentAngles_[i], DHs_[i+1]);
-        // TR * T
-        // for(int i=nJoint_-1;i>=0;i--) Tback_[i] = Ti_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Tback_[i+1];
-        for(int i=nJoint_-1;i>=0;i--) Tback_[i] = cvt::toMat44TRFromDH(DHs_[i], currentAngles_[i]) * Tback_[i+1];
+    /*
+        X_i+h = Tfront[i] * rotZ(angle+h) * Tback[i]
+        X_i   = Tfront[i] * rotZ(angle)   * Tback[i]
+    */
+    Tfront_[0] = Ti_[0];
+    Tback_.back() = Ti_.back();
+    //T = T*RT
+    // for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Ti_[i+1];
+    for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RTFromDH(currentAngles_[i], DHs_[i+1]);
+    // TR * T
+    // for(int i=nJoint_-1;i>=0;i--) Tback_[i] = Ti_[i] * cvt::toMat44RotZ(currentAngles_[i]) * Tback_[i+1];
+    for(int i=nJoint_-1;i>=0;i--) Tback_[i] = cvt::toMat44TRFromDH(DHs_[i], currentAngles_[i]) * Tback_[i+1];
 
-        /*
-            x_i+h = T[0][i] * rotZ(angle + h) * T[i][nJoint_]
-            x_i   = T[0][i] * rotZ(angle) * T[i][nJoint_]
-            --->    x_i+h - x_i / h  = J[:][i];
-        */
-        Matrix4d MXi  = Tfront_.back();
-        Matrix<double, 6, 1> Xi = cvt::toMat61XYZEuler(MXi);
-        for(int i=0;i<nJoint_;i++){
-            Matrix4d MXih = Tfront_[i]*cvt::toMat44RotZ(currentAngles_[i]+h)*Tback_[i+1];
-            Matrix<double, 6, 1> Xih = cvt::toMat61XYZEuler(MXih);
-            for(int j=0;j<6;j++){
-                if(Xih(j,0) > Xi(j,0) + M_PI) Xih(j,0) -= 2.0 * M_PI;
-                if(Xih(j,0) < Xi(j,0) - M_PI) Xih(j,0) += 2.0 * M_PI;
-                J_(j, i) = ( Xih(j,0) - Xi(j,0) )/h;
-            }
+    /*
+        x_i+h = T[0][i] * rotZ(angle + h) * T[i][nJoint_]
+        x_i   = T[0][i] * rotZ(angle) * T[i][nJoint_]
+        --->    x_i+h - x_i / h  = J[:][i];
+    */
+    Matrix4d MXi  = Tfront_.back();
+    Matrix<double, 6, 1> Xi = cvt::toMat61XYZEuler(MXi);
+    for(int i=0;i<nJoint_;i++){
+        Matrix4d MXih = Tfront_[i]*cvt::toMat44RotZ(currentAngles_[i]+h)*Tback_[i+1];
+        Matrix<double, 6, 1> Xih = cvt::toMat61XYZEuler(MXih);
+        for(int j=0;j<6;j++){
+            if(Xih(j,0) > Xi(j,0) + M_PI) Xih(j,0) -= 2.0 * M_PI;
+            if(Xih(j,0) < Xi(j,0) - M_PI) Xih(j,0) += 2.0 * M_PI;
+            J_(j, i) = ( Xih(j,0) - Xi(j,0) )/h;
         }
+    }
 }
 
 

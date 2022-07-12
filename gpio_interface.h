@@ -1,5 +1,3 @@
-#include <pigpio.h>
-
 #include <vector>
 using namespace std;
 
