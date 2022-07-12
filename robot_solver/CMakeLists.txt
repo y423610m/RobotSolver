@@ -13,6 +13,30 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 
+catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES robot_solver
+#  CATKIN_DEPENDS roscpp rospy std_msgs
+#  DEPENDS system_lib
+)
+
+include_directories(
+ include
+  ${catkin_INCLUDE_DIRS}
+)
+
+add_executable(solver
+  src/main.cpp
+  src/robot_manager.cpp
+  src/robot_solver.cpp
+  src/gpio_interface.cpp
+  src/cvt_convert_functions.cpp
+)
+
+target_link_libraries(solver
+  ${catkin_LIBRARIES}
+)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -102,12 +126,12 @@ find_package(catkin REQUIRED COMPONENTS
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES robot_solver
-#  CATKIN_DEPENDS roscpp rospy std_msgs
-#  DEPENDS system_lib
-)
+# catkin_package(
+# #  INCLUDE_DIRS include
+# #  LIBRARIES robot_solver
+# #  CATKIN_DEPENDS roscpp rospy std_msgs
+# #  DEPENDS system_lib
+# )
 
 ###########
 ## Build ##
@@ -115,10 +139,10 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
-)
+# include_directories(
+# # include
+#   ${catkin_INCLUDE_DIRS}
+# )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
