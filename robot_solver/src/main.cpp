@@ -15,7 +15,6 @@ int main(int argc, char** argv){
 
     ros::Rate loop_rate(10);
     while(ros::ok()){
-        //cout<<"hi"<<endl;
         robot_manager_->update();
 
         ros::spinOnce();

@@ -20,7 +20,8 @@ RobotManager::RobotManager()
     // gpio_->setMoterAngles(vector<double>(nJoint_, 0.), minAngles_, maxAngles_);
     // this_thread::sleep_for(chrono::milliseconds(1000));
 
-
+    //  実機の関節角度でsolver初期化
+    solver_->setCurrentAngles(ros_interface_->getActualJointPosition());
 
     initialized_ = true;
     cout<<"RobotManager constructed"<<endl;
@@ -43,11 +44,12 @@ void RobotManager::update(){
         IK後の関節角度と姿勢を確認
     */
 
-    solver_->setCurrentAngles(vector<double>(6,0.1));
+    //solver_->setCurrentAngles(vector<double>(nJoint_,0.1));
 
     double a = 0.5;
     //; PL("A?") cin>>a;
-    vector<double> jointAngles = vector<double>(6, a);
+    vector<double> jointAngles = ros_interface_->getActualJointPosition();
+    jointAngles[0] += 0.05*sin(0.1*cnt_);
     vector<double> tipPose = solver_->FK(jointAngles);
 
     //solver_->setCurrentAngles(tipPose);
