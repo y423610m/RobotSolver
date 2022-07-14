@@ -31,6 +31,7 @@ add_executable(solver
   src/robot_solver.cpp
   src/gpio_interface.cpp
   src/cvt_convert_functions.cpp
+  src/ros_interface.cpp
 )
 
 target_link_libraries(solver

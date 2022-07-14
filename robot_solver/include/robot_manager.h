@@ -5,6 +5,7 @@ using namespace std;
 
 #include "robot_solver.h"
 #include "gpio_interface.h"
+#include "ros_interface.h"
 
 
 class RobotManager{
@@ -12,6 +13,7 @@ private:
     bool initialized_ = false;
     unique_ptr<RobotSolver> solver_;
     unique_ptr<GPIOInterface> gpio_;
+    unique_ptr<ROSInterface> ros_interface_;
 
     int nJoint_ = -1;
     vector<double> minAngles_;

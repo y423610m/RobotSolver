@@ -8,6 +8,7 @@
 RobotManager::RobotManager()
 :solver_(new RobotSolver())
 ,gpio_(new GPIOInterface())
+,ros_interface_(new ROSInterface())
 {
     //get Parameters
     nJoint_ = solver_->getNJoint();
@@ -55,6 +56,9 @@ void RobotManager::update(){
     solver_->numericIK(tipPose);
     vector<double> resultJointAngles = solver_->getCurrentAngles();
     vector<double> resultTipPose = solver_->FK(resultJointAngles);
+
+
+    ros_interface_->publishJointAngles(resultJointAngles);
 
     // PL("----------result---------")
     // EL(jointAngles)
