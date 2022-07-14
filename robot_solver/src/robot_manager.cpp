@@ -46,8 +46,7 @@ void RobotManager::update(){
 
     //solver_->setCurrentAngles(vector<double>(nJoint_,0.1));
 
-    double a = 0.5;
-    //; PL("A?") cin>>a;
+
     vector<double> jointAngles = ros_interface_->getActualJointPosition();
     jointAngles[0] += 0.05*sin(0.1*cnt_);
     vector<double> tipPose = solver_->FK(jointAngles);

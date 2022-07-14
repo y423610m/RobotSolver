@@ -11,8 +11,8 @@
 
 RobotSolver::RobotSolver(){
     // this->_initSpecificParams6dArm();
-    // this->_initSpecificParamsCobottaArmOnly();
-    this->_initSpecificParamsCobottaArmAndTool();
+    this->_initSpecificParamsCobottaArmOnly();
+    // this->_initSpecificParamsCobottaArmAndTool();
     this->_initCommon();
     initialized_ = true;
     cout<<"RobotSolver constructed"<<endl;
@@ -66,6 +66,7 @@ void RobotSolver::_initSpecificParams6dArm(){
 
     //DHs_.size() == nJoint + tipPose
     assert((int)DHs_.size() == nJoint_+1);
+    cout<<"init for 6d arm"<<endl;
 }
 
 void RobotSolver::_initSpecificParamsCobottaArmOnly(){
@@ -92,6 +93,7 @@ void RobotSolver::_initSpecificParamsCobottaArmOnly(){
 
     //DHs_.size() == nJoint + tipPose
     assert((int)DHs_.size() == nJoint_+1);
+    cout<<"init for cobotta without tip tool"<<endl;
 }
 
 void RobotSolver::_initSpecificParamsCobottaArmAndTool(){
@@ -119,6 +121,7 @@ void RobotSolver::_initSpecificParamsCobottaArmAndTool(){
 
     //DHs_.size() == nJoint + tipPose
     assert((int)DHs_.size() == nJoint_+1);
+    cout<<"init for cobotta including tip tool"<<endl;
 }
 
 // applied for any robot
