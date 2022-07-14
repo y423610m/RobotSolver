@@ -3,7 +3,7 @@
 
 ROSInterface::ROSInterface(){
     ros::NodeHandle nh;
-    jointAnglesPublisher_ = nh.advertise<std_msgs::Float64MultiArray>("/cobotta/arm_controller2/command", 1000);
+    jointAnglesPublisher_ = nh.advertise<std_msgs::Float64MultiArray>("/cobotta_r/arm_controller2/command", 1000);
     jointAnglesSubscriber_ = nh.subscribe("/joint_states", 3, &ROSInterface::_getJointAnglesCB, this);
 }
 
@@ -27,13 +27,11 @@ void ROSInterface::publishJointAngles(const vector<double>& jointAngles){
 
 // void ROSInterface::_getJointAnglesCB(const sensor_msgs::JointState& JointState){
 void ROSInterface::_getJointAnglesCB(const sensor_msgs::JointState& jointState){
-    if(jointPosition_.size()!=JointState.position.size()) jointPosition_.resize(JointState.position.size());
-    for(int i=0;i<(int)JointState.position.size();i++) jointPosition_[i] = JointState.position[i]; 
+    if(jointPosition_.size()!=jointState.position.size()) jointPosition_.resize(jointState.position.size());
+    for(int i=0;i<(int)jointState.position.size();i++) jointPosition_[i] = jointState.position[i]; 
 }
 
 vector<double> ROSInterface::getActualJointPosition(){
-    while(jointPosition_.size()==0){/*一回取得するまで待機*/}
-    if(jointAnglesArray.size()!=jointPosition_.size()) jointAngleArray.resize(jointPosition_);
-    for(int i=0;i<(int)jointPosition_.size();i++) jointAnglesArray[i] = jointPosition_[i];
+    // while(jointPosition_.size()==0){/*一回取得するまで待機*/}
     return jointPosition_;
 }
