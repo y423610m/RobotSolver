@@ -3,15 +3,22 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "~/Desktop/robot_solver_ws/src/include"
+                // "${workspaceFolder}/**",
+                // "/opt/ros/noetic/include",
+                // "${workspaceFolder}/robot_solver/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",
             "cppStandard": "gnu++14",
             "intelliSenseMode": "linux-gcc-arm64",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "compilerArgs": [
+                // "-I ~/Desktop/robot_solver_ws/src/robot_solver/include",
+                // "-I /opt/ros/noetic/include",
+                // "-I /opt/ros/noetic/include/",
+                // "-I /opt/ros/noetic/include/ros"
+            ]
         }
     ],
     "version": 4

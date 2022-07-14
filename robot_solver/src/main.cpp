@@ -3,7 +3,6 @@
 using namespace std;
 
 #include "ros/ros.h"
-#include "std_msgs/String.h"
 
 #include "robot_manager.h"
 
