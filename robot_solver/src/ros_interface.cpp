@@ -3,8 +3,8 @@
 
 ROSInterface::ROSInterface(){
     ros::NodeHandle nh;
-    jointAnglesPublisher_ = nh.advertise<std_msgs::Float64MultiArray>("/topicName1", 1000);
-    jointAnglesSubscriber_ = nh.subscribe("/topicName2", 3, &ROSInterface::_getJointAnglesCB, this);
+    jointAnglesPublisher_ = nh.advertise<std_msgs::Float64MultiArray>("/cobotta/arm_controller2/command", 1000);
+    jointAnglesSubscriber_ = nh.subscribe("/joint_states", 3, &ROSInterface::_getJointAnglesCB, this);
 }
 
 
