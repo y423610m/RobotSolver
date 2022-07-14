@@ -49,8 +49,8 @@ void RobotManager::update(){
 
     vector<double> jointAngles = ros_interface_->getActualJointPosition();
     int th = 10000;
-    if(cnt_%th>th/2) jointAngles[0] += 0.001;
-    else jointAngles[0] -= 0.001;
+    if(cnt_%th>th/2) jointAngles[0] += 0.1;
+    else jointAngles[0] -= 0.1;
     //jointAngles[0] += 0.05*sin(0.1*cnt_);
     vector<double> tipPose = solver_->FK(jointAngles);
 
@@ -62,13 +62,13 @@ void RobotManager::update(){
     vector<double> resultTipPose = solver_->FK(resultJointAngles);
 
 
-    ros_interface_->publishJointAngles(jointAngles);
+    ros_interface_->publishJointAngles(resultJointAngles);
 
-    // PL("----------result---------")
-    // EL(jointAngles)
-    // EL(tipPose)
-    // EL(resultJointAngles)
-    // EL(resultTipPose)
+    PL("----------result---------")
+    EL(jointAngles)
+    EL(tipPose)
+    EL(resultJointAngles)
+    EL(resultTipPose)
 
     cnt_++;
 

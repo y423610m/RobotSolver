@@ -31,7 +31,7 @@ void ROSInterface::_getJointAnglesCB(const sensor_msgs::JointState& jointState){
     for(int i=0;i<(int)jointState.position.size();i++) jointPosition_[i] = jointState.position[i]; 
 }
 
-vector<double> ROSInterface::getActualJointPosition(){
-    // while(jointPosition_.size()==0){/*一回取得するまで待機*/}
+vector<double>& ROSInterface::getActualJointPosition(){
+    // return vector<double>(6, 0.5);
     return jointPosition_;
 }
