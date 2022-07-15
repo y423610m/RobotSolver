@@ -19,7 +19,15 @@ private:
     vector<double> minAngles_;
     vector<double> maxAngles_;
 
-    int cnt_ = 0;
+    vector<double> currentJointAngles_;
+    vector<double> currentTipPose_;
+    vector<double> targetJointAngles_;
+    vector<double> targetTipPose_;
+    vector<double> commandJointAngles_;
+
+    int loopCnt_ = 0;
+    int IKCnt_ = 0;
+    int IKPeriod_ = 16;
 
 
 

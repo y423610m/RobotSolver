@@ -12,7 +12,7 @@ int main(int argc, char** argv){
 
     unique_ptr<RobotManager> robot_manager_(new RobotManager());
 
-    ros::Rate loop_rate(100);
+    ros::Rate loop_rate(128);
     while(ros::ok()){
         robot_manager_->update();
 

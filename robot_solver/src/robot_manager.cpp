@@ -3,6 +3,7 @@
 
 #include <thread>
 #include <chrono>
+#include <cmath>
 
 
 RobotManager::RobotManager()
@@ -14,7 +15,11 @@ RobotManager::RobotManager()
     nJoint_ = solver_->getNJoint();
     minAngles_ = solver_->getMinAngles();
     maxAngles_ = solver_->getMaxAngles();
-
+    currentJointAngles_.resize(nJoint_);
+    currentTipPose_.resize(6);
+    targetJointAngles_.resize(nJoint_);
+    targetTipPose_.resize(6);
+    commandJointAngles_.resize(nJoint_);
 
     //init every joints as 0
     // gpio_->setMoterAngles(vector<double>(nJoint_, 0.), minAngles_, maxAngles_);
@@ -36,41 +41,48 @@ void RobotManager::update(){
     if(!initialized_) return;
     if(ros_interface_->getActualJointPosition().size()==0) return;
  
-    //gpio_->update();
-
     /*
-        適当な関節角度与える
-        その時の姿勢取得
-        IK後の関節角度と姿勢を確認
+        IKPeriod_毎に現在角度取得＆目標角度をIK計算
+        Cobottaへの入力は、(dq/T) * (t-Tsin(t/T))
+        t = IKcnt, T = period
+        速度が(1-cos)になってcollision防げる？
     */
 
     //solver_->setCurrentAngles(vector<double>(nJoint_,0.1));
 
+    //ちょうどperiodだったら
+    if(IKCnt_==0){
+        currentJointAngles_ = ros_interface_->getActualJointPosition();
+        // int th = 10000;
+        // if(loopCnt_%th>th/2) jointAngles[0] += 0.1;
+        // else jointAngles[0] -= 0.1;
+        //jointAngles[0] += 0.05*sin(0.1*cnt_);
+        currentTipPose_ = solver_->FK(currentJointAngles_);
 
-    vector<double> jointAngles = ros_interface_->getActualJointPosition();
-    int th = 10000;
-    if(cnt_%th>th/2) jointAngles[0] += 0.1;
-    else jointAngles[0] -= 0.1;
-    //jointAngles[0] += 0.05*sin(0.1*cnt_);
-    vector<double> tipPose = solver_->FK(jointAngles);
-
-    //solver_->setCurrentAngles(tipPose);
-
-
-    solver_->numericIK(tipPose);
-    vector<double> resultJointAngles = solver_->getCurrentAngles();
-    vector<double> resultTipPose = solver_->FK(resultJointAngles);
+        //solver_->setCurrentAngles(tipPose);
 
 
-    ros_interface_->publishJointAngles(resultJointAngles);
+        solver_->numericIK(currentTipPose_);
+        targetJointAngles_ = solver_->getCurrentAngles();
+        targetTipPose_ = solver_->FK(targetJointAngles_);
+    }
+
+    for(int i=0;i<nJoint_;i++) 
+        commandJointAngles_[i] = (1.0*(targetJointAngles_[i]-currentJointAngles_[i])/IKPeriod_)
+                                    *(1.0-1.0*IKPeriod_*sin(1.0*(1+IKCnt_)/IKPeriod_));
+
+    ros_interface_->publishJointAngles(commandJointAngles_);
 
     PL("----------result---------")
-    EL(jointAngles)
-    EL(tipPose)
-    EL(resultJointAngles)
-    EL(resultTipPose)
+    EL(currentJointAngles_)
+    EL(currentTipPose_)
+    EL(targetJointAngles_)
+    EL(targetTipPose_)
 
-    cnt_++;
+    loopCnt_++;
+    IKCnt_++;
+
+    if(IKCnt_&IKPeriod_) IKCnt_=0;
 
     return;
 
@@ -80,6 +92,6 @@ void RobotManager::update(){
 }
 
 bool RobotManager::checkLoop(){
-    if(cnt_>1000) return false;
+    if(loopCnt_>1000) return false;
     return true;
 }
