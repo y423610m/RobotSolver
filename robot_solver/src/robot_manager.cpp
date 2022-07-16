@@ -58,8 +58,9 @@ void RobotManager::update(){
         currentTipPose_ = solver_->FK(currentJointAngles_);
 
         targetJointAngles_ = currentJointAngles_;
-        if( (loopCnt_/IKPeriod_)&1 ) targetJointAngles_[0] += 0.25;
-        else targetJointAngles_[0] -= 0.25;
+        if( (loopCnt_/IKPeriod_)&1 ) targetJointAngles_[0] = 0.5;
+        else targetJointAngles_[0] = 0.0;
+        //if(targetJointAngles_[0]<minAngles_[0] || maxAngles_[0]<targetJointAngles_[0]) targetJointAngles_[0] = 
         solver_->setTargetAngles(targetJointAngles_);
 
         //targetJointAngles_ = solver_->numericIK(targetTipPose_);
@@ -69,11 +70,13 @@ void RobotManager::update(){
     //     commandJointAngles_[i] = (1.0*(targetJointAngles_[i]-currentJointAngles_[i])/IKPeriod_)
     //                                 *(1.0*IKCnt_-1.0*IKPeriod_*sin(1.0*(1+IKCnt_)/IKPeriod_));
 
+
+
     commandJointAngles_ = solver_->getCommandJointAngles();
 
     ros_interface_->publishJointAngles(commandJointAngles_);
 
-    PS(targetJointAngles_[0]) PL(commandJointAngles_[0])
+    // PS(targetJointAngles_[0]) PL(commandJointAngles_[0])
 
     // PL("----------result---------")
     // EL(currentJointAngles_)

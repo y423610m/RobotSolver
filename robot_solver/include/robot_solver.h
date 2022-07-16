@@ -51,8 +51,10 @@ private:
 
     //PIDControll
     //Gd/2 = sqrt(Gp)
-    double Gp_ = 0.04;
-    double Gd_ = 0.15;
+    // double Gp_ = 0.00025;
+    // double Gd_ = 0.03;
+    double Gp_ = 0.0003;
+    double Gd_ = 0.08;
     vector<double> jointVelocity_;
     vector<double> jointMaxAccel_;
 
