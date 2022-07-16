@@ -27,7 +27,7 @@ private:
 
     int loopCnt_ = 0;
     int IKCnt_ = 0;
-    int IKPeriod_ = 16;
+    int IKPeriod_ = 128;
 
 
 

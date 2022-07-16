@@ -40,6 +40,7 @@ RobotManager::~RobotManager(){
 void RobotManager::update(){
     if(!initialized_) return;
     if(ros_interface_->getActualJointPosition().size()==0) return;
+
  
     /*
         IKPeriod_毎に現在角度取得＆目標角度をIK計算
@@ -50,34 +51,35 @@ void RobotManager::update(){
 
     //solver_->setCurrentAngles(vector<double>(nJoint_,0.1));
 
-    //ちょうどperiodだったら
+
     if(IKCnt_==0){
         currentJointAngles_ = ros_interface_->getActualJointPosition();
-        // int th = 10000;
-        // if(loopCnt_%th>th/2) jointAngles[0] += 0.1;
-        // else jointAngles[0] -= 0.1;
-        //jointAngles[0] += 0.05*sin(0.1*cnt_);
+        solver_->setCurrentAngles(currentJointAngles_);
         currentTipPose_ = solver_->FK(currentJointAngles_);
 
-        //solver_->setCurrentAngles(tipPose);
+        targetJointAngles_ = currentJointAngles_;
+        if( (loopCnt_/IKPeriod_)&1 ) targetJointAngles_[0] += 0.25;
+        else targetJointAngles_[0] -= 0.25;
+        solver_->setTargetAngles(targetJointAngles_);
 
-
-        solver_->numericIK(currentTipPose_);
-        targetJointAngles_ = solver_->getCurrentAngles();
-        targetTipPose_ = solver_->FK(targetJointAngles_);
+        //targetJointAngles_ = solver_->numericIK(targetTipPose_);
     }
 
-    for(int i=0;i<nJoint_;i++) 
-        commandJointAngles_[i] = (1.0*(targetJointAngles_[i]-currentJointAngles_[i])/IKPeriod_)
-                                    *(1.0-1.0*IKPeriod_*sin(1.0*(1+IKCnt_)/IKPeriod_));
+    // for(int i=0;i<nJoint_;i++) 
+    //     commandJointAngles_[i] = (1.0*(targetJointAngles_[i]-currentJointAngles_[i])/IKPeriod_)
+    //                                 *(1.0*IKCnt_-1.0*IKPeriod_*sin(1.0*(1+IKCnt_)/IKPeriod_));
+
+    commandJointAngles_ = solver_->getCommandJointAngles();
 
     ros_interface_->publishJointAngles(commandJointAngles_);
 
-    PL("----------result---------")
-    EL(currentJointAngles_)
-    EL(currentTipPose_)
-    EL(targetJointAngles_)
-    EL(targetTipPose_)
+    PS(targetJointAngles_[0]) PL(commandJointAngles_[0])
+
+    // PL("----------result---------")
+    // EL(currentJointAngles_)
+    // EL(currentTipPose_)
+    // EL(targetJointAngles_)
+    // EL(targetTipPose_)
 
     loopCnt_++;
     IKCnt_++;
@@ -92,6 +94,6 @@ void RobotManager::update(){
 }
 
 bool RobotManager::checkLoop(){
-    if(loopCnt_>1000) return false;
+    if(loopCnt_>100) return false;
     return true;
 }

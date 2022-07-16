@@ -21,7 +21,8 @@ private:
     int nJoint_ = -1;
     vector<double> minAngles_;
     vector<double> maxAngles_;
-    vector<double> currentAngles_;
+    vector<double> currentJointAngles_;
+    vector<double> targetJointAngles_;
     vector<double> basePose_;
     vector<DHParam> DHs_;
     Matrix4d Tbase_;
@@ -48,17 +49,29 @@ private:
     vector<double> _uniqueIK(const vector<double>& targetPose, int maxLoop=100);
     vector<double> _undeterminedIK(const vector<double>& targetPose);
 
+    //PIDControll
+    //Gd/2 = sqrt(Gp)
+    double Gp_ = 0.04;
+    double Gd_ = 0.15;
+    vector<double> jointVelocity_;
+    vector<double> jointMaxAccel_;
+
+
 public:
     RobotSolver();
     ~RobotSolver();
 
     vector<double> FK(const vector<double>& jointAngles);
     vector<double> numericIK(const vector<double>& targetPose);
+    vector<double> getCommandJointAngles();
+
+
     int getNJoint(){return nJoint_;}
     vector<double> getMinAngles(){ return minAngles_; }
     vector<double> getMaxAngles(){ return maxAngles_; }
-    vector<double> getCurrentAngles(){ return currentAngles_; }
-    bool setCurrentAngles(const vector<double> angles);
+    vector<double> getCurrentAngles(){ return currentJointAngles_; }
+    bool setCurrentAngles(const vector<double> currentAngles);
+    bool setTargetAngles(const vector<double> targetAngles);
 
 
 };
