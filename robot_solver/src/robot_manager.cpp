@@ -54,8 +54,8 @@ void RobotManager::update(){
 
     if(IKCnt_==0){
         currentJointAngles_ = ros_interface_->getActualJointPosition();
-        solver_->setCurrentAngles(currentJointAngles_);
-        currentTipPose_ = solver_->FK(currentJointAngles_);
+        // solver_->setCurrentAngles(currentJointAngles_);
+        // currentTipPose_ = solver_->FK(currentJointAngles_);
 
         targetJointAngles_ = currentJointAngles_;
         if( (loopCnt_/IKPeriod_)&1 ) targetJointAngles_[0] = 0.5;
