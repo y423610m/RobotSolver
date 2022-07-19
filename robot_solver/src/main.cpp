@@ -1,5 +1,4 @@
 // git clone -b main_ros https://github/y423610m/RobotSolver.git
-// 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
 
 #include <iostream>
 #include <memory>

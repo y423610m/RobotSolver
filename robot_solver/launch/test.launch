@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="robot_solver" type="solver_node" name="solver"/>
+</launch>

@@ -39,6 +39,7 @@ RobotManager::~RobotManager(){
 void RobotManager::update(){
     if(!initialized_) return;
     if(ros_interface_->getActualJointPosition().size()==0) return;
+    if(loopCnt_==0) solver_->setCurrentAngles(ros_interface_->getActualJointPosition());
 
  
     /*
