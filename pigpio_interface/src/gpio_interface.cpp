@@ -7,14 +7,20 @@
 using namespace std;
 using std::this_thread::sleep_for;
 
-#define WITHOUT_PIGPIO 1
-
-#ifndef WITHOUT_PIGPIO
-    #if __has_include(<pigpio.h>)
-        #include <pigpio.h>
-        #define HAS_PIGPIO 1
-    #endif
+#if __has_include(<pigpio.h>)
+    #include <pigpio.h>
+    #define HAS_PIGPIO 1
 #endif
+
+// #if __has_include(<pigpiod_if.h>)
+//     #include <pigpiod_if.h>
+//     #define HAS_PIGPIO 1
+// #endif
+
+// #if __has_include(<pigpiod_if2.h>)
+//     #include <pigpiod_if2.h>
+//     #define HAS_PIGPIO 1
+// #endif
 
 #ifdef HAS_PIGPIO
     GPIOInterface::GPIOInterface()

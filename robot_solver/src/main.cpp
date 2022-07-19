@@ -10,7 +10,7 @@ using namespace std;
 #include "robot_manager.h"
 
 int main(int argc, char** argv){
-    ros::init(argc, argv, "solver");
+    ros::init(argc, argv, "solver_node");
     ros::NodeHandle nh;
 
     unique_ptr<RobotManager> robot_manager_(new RobotManager());

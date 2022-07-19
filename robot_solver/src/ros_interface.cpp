@@ -27,8 +27,9 @@ void ROSInterface::publishJointAngles(const vector<double>& jointAngles){
 
 // void ROSInterface::_getJointAnglesCB(const sensor_msgs::JointState& JointState){
 void ROSInterface::_getJointAnglesCB(const sensor_msgs::JointState& jointState){
-    if(jointPosition_.size()!=jointState.position.size()) jointPosition_.resize(jointState.position.size());
-    for(int i=0;i<(int)jointState.position.size();i++) jointPosition_[i] = jointState.position[i]; 
+    // if(jointPosition_.size()!=jointState.position.size()) jointPosition_.resize(jointState.position.size());
+    // for(int i=0;i<(int)jointState.position.size();i++) jointPosition_[i] = jointState.position[i];
+    jointPosition_ = jointState.position;
 }
 
 vector<double>& ROSInterface::getActualJointPosition(){

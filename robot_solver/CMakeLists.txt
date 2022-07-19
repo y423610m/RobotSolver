@@ -25,16 +25,15 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(solver
+add_executable(solver_node
   src/main.cpp
   src/robot_manager.cpp
   src/robot_solver.cpp
-  src/gpio_interface.cpp
   src/cvt_convert_functions.cpp
   src/ros_interface.cpp
 )
 
-target_link_libraries(solver
+target_link_libraries(solver_node
   ${catkin_LIBRARIES}
 )
 

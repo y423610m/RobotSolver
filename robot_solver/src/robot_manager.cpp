@@ -8,18 +8,17 @@
 
 RobotManager::RobotManager()
 :solver_(new RobotSolver())
-,gpio_(new GPIOInterface())
 ,ros_interface_(new ROSInterface())
 {
     //get Parameters
-    nJoint_ = solver_->getNJoint();
-    minAngles_ = solver_->getMinAngles();
-    maxAngles_ = solver_->getMaxAngles();
-    currentJointAngles_.resize(nJoint_);
-    currentTipPose_.resize(6);
-    targetJointAngles_.resize(nJoint_);
-    targetTipPose_.resize(6);
-    commandJointAngles_.resize(nJoint_);
+    // nJoint_ = solver_->getNJoint();
+    // minAngles_ = solver_->getMinAngles();
+    // maxAngles_ = solver_->getMaxAngles();
+    // currentJointAngles_.resize(nJoint_);
+    // currentTipPose_.resize(6);
+    // targetJointAngles_.resize(nJoint_);
+    // targetTipPose_.resize(6);
+    // commandJointAngles_.resize(nJoint_);
 
     //init every joints as 0
     // gpio_->setMoterAngles(vector<double>(nJoint_, 0.), minAngles_, maxAngles_);
