@@ -97,6 +97,6 @@ void RobotManager::update(){
 }
 
 bool RobotManager::checkLoop(){
-    if(loopCnt_>100) return false;
+    //if(loopCnt_>100) return false;
     return true;
 }
