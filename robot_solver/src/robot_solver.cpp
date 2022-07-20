@@ -83,7 +83,7 @@ void RobotSolver::_initSpecificParamsCobottaArmOnly(){
     DHs_.push_back({0., 90., 0.0598, 0.});
     DHs_.push_back({0.12, 270., 0.175, 0.}); //joint[6]->armTip
 
-    jointMaxAccel_ = vector<double>(nJoint_, 0.02);
+    jointMaxAccel_ = vector<double>(nJoint_, 5e-5);
 
     cerr<<"init for cobotta without tip tool"<<endl;
 }
