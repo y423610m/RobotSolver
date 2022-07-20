@@ -50,10 +50,16 @@ void RobotManager::update(){
         targetJointAngles_ = currentJointAngles_;
         if( (loopCnt_/IKPeriod_)&1 ) targetJointAngles_[0] = 0.5;
         else targetJointAngles_[0] = 0.0;
-        //if(targetJointAngles_[0]<minAngles_[0] || maxAngles_[0]<targetJointAngles_[0]) targetJointAngles_[0] = 
+
+        PS("tar Ang") PL(targetJointAngles_)
+        PS("tar Pose") PL(solver_->FK(targetJointAngles_))
+
+        targetJointAngles_ = solver_->numericIK(targetTipPose_);
+        PS("com Ang") PL(targetJointAngles_)
+        PS("com Pose") PL(solver_->FK(targetJointAngles_))
+
         solver_->setTargetAngles(targetJointAngles_);
 
-        //targetJointAngles_ = solver_->numericIK(targetTipPose_);
     }
 
     // for(int i=0;i<nJoint_;i++) 

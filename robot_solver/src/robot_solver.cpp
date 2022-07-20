@@ -308,16 +308,54 @@ void RobotSolver::_undeterminedIK(const vector<double>& targetPose){
 
 // targetAngles.size() == always 6(x,y,z,ax,ay,az) [m, deg]
 // return size == nJoint [deg]
-vector<double> RobotSolver::numericIK(const vector<double>& targetPose){
+vector<double> RobotSolver::numericIK(const vector<double>& targetPose, int maxLoop){
 
-    targetJointAngles_ = currentJointAngles_;
+    // targetJointAngles_ = currentJointAngles_;
+    // if(nJoint_ == 6) this->_uniqueIK(targetPose);
+    // if(nJoint_ > 6) this->_redundantIK(targetPose);
+    // // else if(nJoint_ == 6){
+    // // else jointAngles = this->_undeterminedIK(targetPose);
 
-    if(nJoint_ == 6) this->_uniqueIK(targetPose);
+    Matrix<double, 6,1> targetX = cvt::toMat61XYZEuler(targetPose);
 
-    if(nJoint_ > 6) this->_redundantIK(targetPose);
-    // else if(nJoint_ == 6){
-    // else jointAngles = this->_undeterminedIK(targetPose);
+    for(int loop=0; loop<maxLoop;loop++){
 
+        //J_
+        this->_calculateJ();
+
+        //    dq = J-1 * dx
+        Matrix<double, 6, 1> currentX = cvt::toMat61XYZEuler(Tfront_.back());
+        Matrix<double, 6, 1> dX = targetX - currentX;
+        for(int i=3;i<6;i++){
+            double& val = dX(i,0);
+            if(val>M_PI)  val-=2.0*M_PI;
+            if(val<-M_PI) val+=2.0*M_PI;
+        }
+
+        double G = 0.5;
+
+        if(nJoint_==6) dq_ = J_.inverse() * dX * G;
+        else if(nJoint_>6) dq_ = J_.transpose()*(J_*J_.transpose()).inverse()* dX * G;
+
+        // q += dq
+        double limit = 0.4 * (maxLoop-loop)/maxLoop + 0.2;
+        double dMax = 0.;
+        for(int i=0;i<nJoint_;i++){
+            double dAngle = max(min(dq_[i], limit), -limit);
+            targetJointAngles_[i] += dAngle;
+            dMax = max(dMax, abs(dAngle));
+        }
+
+        //    check angle range 
+        for(int i=0;i<nJoint_;i++){
+            // targetJointAngles_[i] = max(targetJointAngles_[i], minAngles_[i]);
+            // targetJointAngles_[i] = min(targetJointAngles_[i], maxAngles_[i]);
+            if(targetJointAngles_[i]<-M_PI) targetJointAngles_[i] += 2.0*M_PI;
+            if(targetJointAngles_[i]>M_PI) targetJointAngles_[i] -= 2.0*M_PI;
+        }
+        //ES(loop) EL(targetJointAngles_)
+        //if(dMax<eps) break;
+    }
 
     return targetJointAngles_;
 }
