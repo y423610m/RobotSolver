@@ -190,10 +190,10 @@ void RobotSolver::_calculateJ(){
     Tback_.back() = Ti_.back();
     //T = T*RT
     // for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RotZ(currentJointAngles_[i]) * Ti_[i+1];
-    for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RTFromDH(currentJointAngles_[i], DHs_[i+1]);
+    for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RTFromDH(targetJointAngles_[i], DHs_[i+1]);
     // TR * T
     // for(int i=nJoint_-1;i>=0;i--) Tback_[i] = Ti_[i] * cvt::toMat44RotZ(currentJointAngles_[i]) * Tback_[i+1];
-    for(int i=nJoint_-1;i>=0;i--) Tback_[i] = cvt::toMat44TRFromDH(DHs_[i], currentJointAngles_[i]) * Tback_[i+1];
+    for(int i=nJoint_-1;i>=0;i--) Tback_[i] = cvt::toMat44TRFromDH(DHs_[i], targetJointAngles_[i]) * Tback_[i+1];
 
     /*
         x_i+h = T[0][i] * rotZ(angle + h) * T[i][nJoint_]
@@ -203,7 +203,7 @@ void RobotSolver::_calculateJ(){
     Matrix4d MXi  = Tfront_.back();
     Matrix<double, 6, 1> Xi = cvt::toMat61XYZEuler(MXi);
     for(int i=0;i<nJoint_;i++){
-        Matrix4d MXih = Tfront_[i]*cvt::toMat44RotZ(currentJointAngles_[i]+h)*Tback_[i+1];
+        Matrix4d MXih = Tfront_[i]*cvt::toMat44RotZ(targetJointAngles_[i]+h)*Tback_[i+1];
         Matrix<double, 6, 1> Xih = cvt::toMat61XYZEuler(MXih);
         for(int j=0;j<6;j++){
             if(Xih(j,0) > Xi(j,0) + M_PI) Xih(j,0) -= 2.0 * M_PI;

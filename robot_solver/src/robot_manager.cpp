@@ -48,17 +48,18 @@ void RobotManager::update(){
         // currentTipPose_ = solver_->FK(currentJointAngles_);
 
         targetJointAngles_ = currentJointAngles_;
-        if( (loopCnt_/IKPeriod_)&1 ) targetJointAngles_[0] = 0.5;
+        targetTipPose_ = solver_->FK(targetJointAngles_);
+        if( loopCnt_&IKPeriod_ ) targetJointAngles_[0] = 0.5;
         else targetJointAngles_[0] = 0.0;
 
         PS("tar Ang") PL(targetJointAngles_)
-        PS("tar Pose") PL(solver_->FK(targetJointAngles_))
+        PS("tar Pose") PL(targetTipPose_)
 
         targetJointAngles_ = solver_->numericIK(targetTipPose_);
         PS("com Ang") PL(targetJointAngles_)
         PS("com Pose") PL(solver_->FK(targetJointAngles_))
 
-        solver_->setTargetAngles(targetJointAngles_);
+        //solver_->setTargetAngles(targetJointAngles_);
 
     }
 
