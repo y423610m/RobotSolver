@@ -9,17 +9,18 @@
 
 
 
-RobotSolver::RobotSolver(){
-    // this->_initSpecificParams6dArm();
-    this->_initSpecificParamsCobottaArmOnly();
-    // this->_initSpecificParamsCobottaArmAndTool();
+RobotSolver::RobotSolver(int RobotType){
+    PS("RobotType" ) PL(RobotType)
+    if(RobotType==RobotType_CobottaWithTool) this->_initSpecificParamsCobottaArmAndTool();
+    if(RobotType==RobotType_CobottaWithoutTool) this->_initSpecificParamsCobottaArmOnly();
+    if(RobotType==RobotType_6DOFArm) this->_initSpecificParams6dArm();
     this->_initCommon();
     initialized_ = true;
-    cout<<"RobotSolver constructed"<<endl;
+    cerr<<"RobotSolver constructed"<<endl;
 }
 
 RobotSolver::~RobotSolver(){
-    cout<<"RobotSolver desstructed"<<endl;
+    cerr<<"RobotSolver desstructed"<<endl;
 }
 
 // manually set robot parameters depending on your robot
@@ -29,8 +30,6 @@ void RobotSolver::_initSpecificParamsTemplate(){
     //moters' Range [deg]H
     minAngles_ = vector<double>(nJoint_, 0.);
     maxAngles_ = vector<double>(nJoint_, 180.);
-    //init currentAngles as 0
-    currentJointAngles_ = vector<double>(nJoint_, 0.);
 
     //set DH Parameters {a, alp, d, tht} [m, deg]
     //*******  set tht as every Joint are 0 ***********
@@ -42,8 +41,6 @@ void RobotSolver::_initSpecificParamsTemplate(){
     DHs_.push_back({0., 0., 0., 0.});
     DHs_.push_back({0., 0., 0., 0.}); //joint[5]->armTip
 
-    //DHs_.size() == nJoint + tipPose
-    assert((int)DHs_.size() == nJoint_+1);
 }
 
 void RobotSolver::_initSpecificParams6dArm(){
@@ -51,8 +48,7 @@ void RobotSolver::_initSpecificParams6dArm(){
     //moters' Range [deg]
     minAngles_ = vector<double>(nJoint_, 0.);
     maxAngles_ = vector<double>(nJoint_, 180.);
-    //init currentAngles as 0
-    currentJointAngles_ = vector<double>(nJoint_, 0.);
+
 
     //set DH Parameters {a, alp, d, tht} [m, deg]
     //*******  set tht as every Joint are 0 ***********
@@ -64,9 +60,7 @@ void RobotSolver::_initSpecificParams6dArm(){
     DHs_.push_back({0., 0., 0., 0.});
     DHs_.push_back({0., 0., 0., 0.}); //joint[5]->armTip
 
-    //DHs_.size() == nJoint + tipPose
-    assert((int)DHs_.size() == nJoint_+1);
-    cout<<"init for 6d arm"<<endl;
+    cerr<<"init for 6d arm"<<endl;
 }
 
 void RobotSolver::_initSpecificParamsCobottaArmOnly(){
@@ -74,13 +68,10 @@ void RobotSolver::_initSpecificParamsCobottaArmOnly(){
     //moters' Range [deg]
     minAngles_ = vector<double>(nJoint_, 0.);
     maxAngles_ = vector<double>(nJoint_, 180.);
-    //init currentAngles as 0
-    currentJointAngles_ = vector<double>(nJoint_, 0.);
-    targetJointAngles_ = vector<double>(nJoint_, 0.);
+
 
     //global origin to base. dx,dy,dz,dax,day,daz [m, deg]
     basePose_ = {-0.25, -0.23, 0., 0., 0., 90.};
-    assert((int)basePose_.size()==6);
 
     //set DH Parameters {a, alp, d, tht} [m, deg]
     //*******  set tht as every Joint are 0 ***********
@@ -91,15 +82,10 @@ void RobotSolver::_initSpecificParamsCobottaArmOnly(){
     DHs_.push_back({0., 270., 0.064, 0.});
     DHs_.push_back({0., 90., 0.0598, 0.});
     DHs_.push_back({0.12, 270., 0.175, 0.}); //joint[6]->armTip
-    //DHs_.size() == nJoint + tipPose
-    assert((int)DHs_.size() == nJoint_+1);
 
-    jointVelocity_ = vector<double>(nJoint_, 0.0);
     jointMaxAccel_ = vector<double>(nJoint_, 0.02);
 
-
-
-    cout<<"init for cobotta without tip tool"<<endl;
+    cerr<<"init for cobotta without tip tool"<<endl;
 }
 
 void RobotSolver::_initSpecificParamsCobottaArmAndTool(){
@@ -107,12 +93,9 @@ void RobotSolver::_initSpecificParamsCobottaArmAndTool(){
     //moters' Range [deg]
     minAngles_ = vector<double>(nJoint_, 0.);
     maxAngles_ = vector<double>(nJoint_, 180.);
-    //init currentAngles as 0
-    currentJointAngles_ = vector<double>(nJoint_, 0.);
 
     //global origin to base. dx,dy,dz,dax,day,daz [m, deg]
     basePose_ = {-0.25, -0.23, 0., 0., 0., 90.};
-    assert((int)basePose_.size()==6);
 
     //set DH Parameters {a, alp, d, tht} [m, deg]
     //*******  set tht as every Joint are 0 ***********
@@ -125,40 +108,64 @@ void RobotSolver::_initSpecificParamsCobottaArmAndTool(){
     DHs_.push_back({0., 270., 0.09, 0.}); //joint[6]->toolJoint
     DHs_.push_back({0.012, 0., 0.085, 0.}); //toolJolint->armTip
 
-    //DHs_.size() == nJoint + tipPose
-    assert((int)DHs_.size() == nJoint_+1);
-    cout<<"init for cobotta including tip tool"<<endl;
+    cerr<<"init for cobotta including tip tool"<<endl;
 }
 
 // applied for any robot
 void RobotSolver::_initCommon(){
 
+    //check parameters
+    if(nJoint_<=0){ PS("robotsolver") PL("nJoint_ not set") EL(nJoint_)}
+    if((int)minAngles_.size()!=nJoint_){
+        PS("robotsolver") PS("minAngles not valid") PL("set nJoint*0.0")
+        minAngles_ = vector<double>(nJoint_, 0.);
+    }
+    if((int)maxAngles_.size()!=nJoint_){
+        PS("robotsolver") PS("maxAngles not valid") PL("set nJoint*180deg")
+        maxAngles_ = vector<double>(nJoint_, 180.);
+    }
+    if((int)DHs_.size() != nJoint_+1){PS("robotsolver") PL("DHParams not valid") EL(DHs_.size())}
+    if((int)basePose_.size()!=6){
+        PS("robotsolver") PS("basePose_ not set") PL("set all 0.0")
+        basePose_ = vector<double>(6, 0.0);
+    }
+    if((int)jointMaxAccel_.size()!=nJoint_){
+        PS("robotsolver") PS("jointMaxAccel_ not set") PL("set nJint*0.01")
+        jointMaxAccel_.resize(nJoint_, 0.01);
+    }
+
     // deg -> rad
     for(int i=0;i<nJoint_;i++) minAngles_[i] *= M_PI/180.;
     for(int i=0;i<nJoint_;i++) maxAngles_[i] *= M_PI/180.;
-    for(int i=0;i<nJoint_;i++) currentJointAngles_[i] *= M_PI/180.;
     for(int i=3;i<6;i++) basePose_[i] *= M_PI/180.;
     for(int i=0;i<(int)DHs_.size();i++) DHs_[i].alp *= M_PI/180.;
     for(int i=0;i<(int)DHs_.size();i++) DHs_[i].tht *= M_PI/180.;
 
-    Affine3d aff = Eigen::Translation<double,3>(basePose_[0], basePose_[1], basePose_[2])
+    Eigen::Affine3d aff = Eigen::Translation<double,3>(basePose_[0], basePose_[1], basePose_[2])
                 * AngleAxisd(basePose_[3], Vector3d::UnitX())
                 * AngleAxisd(basePose_[4], Vector3d::UnitY())
                 * AngleAxisd(basePose_[5], Vector3d::UnitZ());
-    // auto rot = aff.rotation();
-    // auto trans = aff.translation();
     for(int i=0;i<4;i++) for(int j=0;j<4;j++) Tbase_(i,j) = aff(i,j);
  
     Ti_ = vector<Matrix4d>(nJoint_+1);
     Ti_[0] = Tbase_ * cvt::toMat44FromDH(DHs_[0]);
-    for(int i=0;i<nJoint_;i++){
-        Ti_[i+1] = cvt::toMat44FromDH(DHs_[i+1]);
-    }
+    for(int i=0;i<nJoint_;i++) Ti_[i+1] = cvt::toMat44FromDH(DHs_[i+1]);
+    PL("bbb")
+
+    currentJointAngles_.resize(nJoint_, 0.);
+    targetJointAngles_ .resize(nJoint_, 0.);
+    jointVelocity_ .resize(nJoint_, 0.);
+
 
     //for IK calc
     J_.resize(6, nJoint_);
+    dq_.resize(nJoint_, 1);
     Tfront_.resize(nJoint_+1); // base -> joint[i]
     Tback_.resize(nJoint_+1);  // joint[i] -> base
+
+
+    PS("robotsolver") PL("initCommon done")
+
 
 }
 
@@ -207,7 +214,7 @@ void RobotSolver::_calculateJ(){
 }
 
 
-vector<double> RobotSolver::_redundantIK(const vector<double>& targetPose, int maxLoop){
+void RobotSolver::_redundantIK(const vector<double>& targetPose, int maxLoop){
 
     Matrix<double, 6,1> targetX = cvt::toMat61XYZEuler(targetPose);
 
@@ -226,11 +233,11 @@ vector<double> RobotSolver::_redundantIK(const vector<double>& targetPose, int m
         }
 
         // dq = J-1 * dx        
-        Matrix<double, Dynamic, 1> dq = J_.transpose()*(J_*J_.transpose()).inverse()* dX;
+        dq_ = J_.transpose()*(J_*J_.transpose()).inverse()* dX;
         double limit = 0.3 * (maxLoop-loop)/maxLoop + 0.2;
         double dMax = 0.;
         for(int i=0;i<nJoint_;i++){
-            double dAngle = max(min(dq[i], limit), -limit);
+            double dAngle = max(min(dq_[i], limit), -limit);
             targetJointAngles_[i] += dAngle;
             dMax = max(dMax, abs(dAngle));
         }
@@ -247,13 +254,13 @@ vector<double> RobotSolver::_redundantIK(const vector<double>& targetPose, int m
         if(dMax<eps) break;
     }    
 
-    return vector<double>(nJoint_, 0.);
+
 }
 
 
 
 
-vector<double> RobotSolver::_uniqueIK(const vector<double>& targetPose, int maxLoop){
+void RobotSolver::_uniqueIK(const vector<double>& targetPose, int maxLoop){
 
     Matrix<double, 6,1> targetX = cvt::toMat61XYZEuler(targetPose);
 
@@ -270,13 +277,13 @@ vector<double> RobotSolver::_uniqueIK(const vector<double>& targetPose, int maxL
             if(val>M_PI)  val-=2.0*M_PI;
             if(val<-M_PI) val+=2.0*M_PI;
         }
-        Matrix<double, 6, 1> dq = J_.inverse() * dX;
+        dq_ = J_.inverse() * dX;
 
         // q += dq
         double limit = 0.4 * (maxLoop-loop)/maxLoop + 0.2;
         double dMax = 0.;
         for(int i=0;i<nJoint_;i++){
-            double dAngle = max(min(dq[i], limit), -limit);
+            double dAngle = max(min(dq_[i], limit), -limit);
             targetJointAngles_[i] += dAngle;
             dMax = max(dMax, abs(dAngle));
         }
@@ -292,13 +299,11 @@ vector<double> RobotSolver::_uniqueIK(const vector<double>& targetPose, int maxL
         if(dMax<eps) break;
     }
 
-    return vector<double>(nJoint_, 0.);
 }
 
-vector<double> RobotSolver::_undeterminedIK(const vector<double>& targetPose){
+void RobotSolver::_undeterminedIK(const vector<double>& targetPose){
 
 
-    return vector<double>(nJoint_, 0.);
 }
 
 // targetAngles.size() == always 6(x,y,z,ax,ay,az) [m, deg]

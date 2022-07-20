@@ -5,27 +5,17 @@
 #include <chrono>
 #include <cmath>
 
+#include <string>
+
 
 RobotManager::RobotManager()
-:solver_(new RobotSolver())
-,ros_interface_(new ROSInterface())
+:ros_interface_(new ROSInterface())
+,solver_(new RobotSolver(ros_interface_->getParamInt(string("/cobotta_r/solver_node/RobotType"))))
 {
-    //get Parameters
-    // nJoint_ = solver_->getNJoint();
-    // minAngles_ = solver_->getMinAngles();
-    // maxAngles_ = solver_->getMaxAngles();
-    // currentJointAngles_.resize(nJoint_);
-    // currentTipPose_.resize(6);
-    // targetJointAngles_.resize(nJoint_);
-    // targetTipPose_.resize(6);
-    // commandJointAngles_.resize(nJoint_);
 
-    //init every joints as 0
-    // gpio_->setMoterAngles(vector<double>(nJoint_, 0.), minAngles_, maxAngles_);
-    // this_thread::sleep_for(chrono::milliseconds(1000));
 
     //  実機の関節角度でsolver初期化
-    solver_->setCurrentAngles(ros_interface_->getActualJointPosition());
+    //solver_->setCurrentAngles(ros_interface_->getActualJointPosition());
 
     initialized_ = true;
     cout<<"RobotManager constructed"<<endl;

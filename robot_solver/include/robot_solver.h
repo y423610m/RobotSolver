@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -13,6 +15,10 @@ using namespace Eigen;
     length is always [m] !!!!! (not [mm])
     Except init specific fuunctions, any angle is radian!!!!!
 */
+#define RobotType_ROSParam 999
+#define RobotType_CobottaWithTool 1
+#define RobotType_CobottaWithoutTool 2
+#define RobotType_6DOFArm 4
 
 class RobotSolver{
 private:
@@ -42,12 +48,13 @@ private:
 
     //IK functions
     Matrix<double, 6, Dynamic> J_;
+    Matrix<double, Dynamic, 1> dq_;
     vector<Matrix4d> Tfront_; // base -> joint[i]
     vector<Matrix4d> Tback_;  // joint[i] -> base    void _calculateJ();
     void _calculateJ();
-    vector<double> _redundantIK(const vector<double>& targetPose, int maxLoop=100);
-    vector<double> _uniqueIK(const vector<double>& targetPose, int maxLoop=100);
-    vector<double> _undeterminedIK(const vector<double>& targetPose);
+    void _redundantIK(const vector<double>& targetPose, int maxLoop=100);
+    void _uniqueIK(const vector<double>& targetPose, int maxLoop=100);
+    void _undeterminedIK(const vector<double>& targetPose);
 
     //PIDControll
     //Gd/2 = sqrt(Gp)
@@ -60,7 +67,7 @@ private:
 
 
 public:
-    RobotSolver();
+    RobotSolver(int RobotType = 1);
     ~RobotSolver();
 
     vector<double> FK(const vector<double>& jointAngles);

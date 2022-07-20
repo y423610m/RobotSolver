@@ -10,8 +10,8 @@ using namespace std;
 class RobotManager{
 private:
     bool initialized_ = false;
-    unique_ptr<RobotSolver> solver_;
     unique_ptr<ROSInterface> ros_interface_;
+    unique_ptr<RobotSolver> solver_;
 
     // int nJoint_ = -1;
     // vector<double> minAngles_;

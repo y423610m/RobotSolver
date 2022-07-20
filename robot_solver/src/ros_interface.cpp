@@ -3,7 +3,7 @@
 
 ROSInterface::ROSInterface(){
     ros::NodeHandle nh;
-    jointAnglesPublisher_ = nh.advertise<std_msgs::Float64MultiArray>("/cobotta_r/arm_controller2/command", 1000);
+    jointAnglesPublisher_ = nh.advertise<std_msgs::Float64MultiArray>("arm_controller2/command", 1000);
     jointAnglesSubscriber_ = nh.subscribe("/joint_states", 3, &ROSInterface::_getJointAnglesCB, this);
 }
 
@@ -35,4 +35,17 @@ void ROSInterface::_getJointAnglesCB(const sensor_msgs::JointState& jointState){
 vector<double>& ROSInterface::getActualJointPosition(){
     //jointPosition_ = vector<double>(6, 0.5);
     return jointPosition_;
+}
+
+int ROSInterface::getParamInt(string ParamName){
+    int retVal=1;
+    nh_.getParam(ParamName, retVal);
+    return retVal;
+}
+
+template<typename T>
+T ROSInterface::getParam(string ParamName){
+    T retVal;
+    nh_.getParam(ParamName, retVal);
+    return retVal;    
 }

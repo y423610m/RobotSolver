@@ -20,5 +20,7 @@ public:
     ~ROSInterface();
     void publishJointAngles(const vector<double>& jointAngles);
     vector<double>& getActualJointPosition();
+    int getParamInt(string ParamName);
+    template<typename T> T getParam(string ParamName);
 
 };
