@@ -3,7 +3,7 @@
         <node pkg="robot_solver" type="solver_node" name="solver_node">
             <remap from="targetJointAngles" to="arm_controller2/command"/>
             <remap from="actualJointAngles" to="/joint_states"/>
-            <remap from="targetTipPose" to="Leader_Right"/>
+            <remap from="targetTipPose" to="/Leader_Right"/>
             <param name="RobotType" value="2"/>
             <!-- <rosparam command="load" file="$(find robot_solver)/config/CobottaDH.yaml"/> -->
         </node>

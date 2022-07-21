@@ -29,6 +29,9 @@ RobotManager::~RobotManager(){
 void RobotManager::update(){
     if(!initialized_) return;
 
+    vector<double> tmp(6,1e-8);
+    PL(solver_->FK(tmp))
+
     bool ok = false;
 
     if(RobotType_==RobotType_CobottaWithTool) ok = this->_updateCobottaWithTool();

@@ -77,11 +77,11 @@ void RobotSolver::_initSpecificParamsCobottaWithoutTool(){
     //*******  set tht as every Joint are 0 ***********
     DHs_.push_back({0., 0., 0.175, 0.}); //base=>joint[0]
     DHs_.push_back({0., 270., 0., 270.}); //joint[0]->joint[1]
-    DHs_.push_back({0.17, 180., -0.02, 0.}); 
+    DHs_.push_back({0.17, 180., -0.02, 90.}); ////////////////////////last 0->90!!!
     DHs_.push_back({0.01, 90., 0.175, 0.}); //dummy3->dummy4
     DHs_.push_back({0., 270., 0.064, 0.});
     DHs_.push_back({0., 90., 0.0598, 0.});
-    DHs_.push_back({0.12, 270., 0.175, 0.}); //joint[6]->armTip
+    DHs_.push_back({0.012, 270., 0.175, 0.}); //joint[6]->armTip
 
     jointMaxAccel_ = vector<double>(nJoint_, 5e-5);
     jointMaxVelocity_ = vector<double>(nJoint_, 1e-3);
@@ -178,7 +178,11 @@ vector<double> RobotSolver::FK(const vector<double>& jointAngles){
     //Tfrom base to Tip
     Matrix4d Tb2t = Ti_[0];
     // for(int i=0;i<nJoint_;i++) Tb2t *= cvt::toMat44RotZ(jointAngles[i])*Ti_[i+1];
-    for(int i=0;i<nJoint_;i++) Tb2t *= cvt::toMat44RTFromDH(jointAngles[i], DHs_[i+1]);
+    PL(0) PL(Tb2t)
+    for(int i=0;i<nJoint_;i++){
+        Tb2t *= cvt::toMat44RTFromDH(jointAngles[i], DHs_[i+1]);
+        PL(i+1) PL(Tb2t)
+    }
     vector<double> tipPose = cvt::toVecXYZEuler(Tb2t);
     return tipPose;
 }
