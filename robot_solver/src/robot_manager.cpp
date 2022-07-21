@@ -86,7 +86,7 @@ bool RobotManager::_updateCobottaWithoutTool(){
         //orientation
         for(int i=3;i<6;i++) targetTipPose_[i] = currentTargetTipPose_[i];
 
-        if(currentTargetTipPose_.size()){
+        if(lastTargetTipPose_.size()){
             //position
             double scale = 1.0;
             if(true) for(int i=0;i<3;i++)
