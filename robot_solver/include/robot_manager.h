@@ -24,9 +24,9 @@ private:
     int IKCnt_ = 0;
     int IKPeriod_ = 128;
 
-    void _updateCobottaWithTool();
-    void _updateCobottaWithoutTool();
-    void _update6DOFArm();
+    bool _updateCobottaWithTool();
+    bool _updateCobottaWithoutTool();
+    bool _update6DOFArm();
 
 public:
     RobotManager(int RobotType);

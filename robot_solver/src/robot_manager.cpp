@@ -29,21 +29,27 @@ RobotManager::~RobotManager(){
 void RobotManager::update(){
     if(!initialized_) return;
 
-    if(RobotType_==RobotType_CobottaWithTool) this->_updateCobottaWithTool();
-    if(RobotType_==RobotType_CobottaWithoutTool) this->_updateCobottaWithoutTool();
-    if(RobotType_==RobotType_6DOFArm) this->_update6DOFArm();
+    bool ok = false;
+
+    if(RobotType_==RobotType_CobottaWithTool) ok = this->_updateCobottaWithTool();
+    if(RobotType_==RobotType_CobottaWithoutTool) ok = this->_updateCobottaWithoutTool();
+    if(RobotType_==RobotType_6DOFArm) ok = this->_update6DOFArm();
+
+
+    if(!ok) return;
 
     loopCnt_++;
     IKCnt_++;
     if(IKCnt_&IKPeriod_) IKCnt_=0;
 }
 
-void RobotManager::_updateCobottaWithTool(){
-
+bool RobotManager::_updateCobottaWithTool(){
+    return false;
 }
 
-void RobotManager::_updateCobottaWithoutTool(){
-    if(ros_interface_->getActualJointPosition().size()==0) return;
+bool RobotManager::_updateCobottaWithoutTool(){
+    if(ros_interface_->getActualJointPosition().size()==0) return false;
+
     if(loopCnt_==0) solver_->setCurrentAngles(ros_interface_->getActualJointPosition());
 
  
@@ -80,10 +86,11 @@ void RobotManager::_updateCobottaWithoutTool(){
     // for(int i=0;i<nJoint_;i++) 
     //     commandJointAngles_[i] = (1.0*(targetJointAngles_[i]-currentJointAngles_[i])/IKPeriod_)
     //                                 *(1.0*IKCnt_-1.0*IKPeriod_*sin(1.0*(1+IKCnt_)/IKPeriod_));
+    return true;
 }
 
-void RobotManager::_update6DOFArm(){
-
+bool RobotManager::_update6DOFArm(){
+    return false;
 }
 
 bool RobotManager::checkLoop(){
