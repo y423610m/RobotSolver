@@ -53,7 +53,7 @@ bool RobotManager::_updateCobottaWithoutTool(){
 
     if(loopCnt_==0){
         solver_->setCurrentAngles(ros_interface_->getActualJointPosition());
-        targetJointAngles_ = solver_->FK(ros_interface_->getActualJointPosition());
+        targetTipPose_ = solver_->FK(ros_interface_->getActualJointPosition());
     }
 
  
@@ -86,11 +86,13 @@ bool RobotManager::_updateCobottaWithoutTool(){
         //orientation
         for(int i=3;i<6;i++) targetTipPose_[i] = currentTargetTipPose_[i];
 
-        //position
-        double scale = 1.0;
-        if(true) for(int i=0;i<3;i++)
-            targetTipPose_[i] += (currentTargetTipPose_[i]-lastTargetTipPose_[i]) * scale;
-        
+        if(currentTargetTipPose_.size()){
+            //position
+            double scale = 1.0;
+            if(true) for(int i=0;i<3;i++)
+                targetTipPose_[i] += (currentTargetTipPose_[i]-lastTargetTipPose_[i]) * scale;
+            
+        }
         targetJointAngles_ = solver_->numericIK(targetTipPose_);
         
         lastTargetTipPose_ = currentTipPose_;
