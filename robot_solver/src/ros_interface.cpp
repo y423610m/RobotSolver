@@ -43,10 +43,10 @@ void ROSInterface::_getTargetTipPoseCB(const geometry_msgs::Pose& targetTipPose)
     targetTipPose_[0] = targetTipPose.position.x;
     targetTipPose_[1] = targetTipPose.position.y;
     targetTipPose_[2] = targetTipPose.position.z;
-    targetTipPose_[3] = targetTipPose.orientation.x;
-    targetTipPose_[4] = targetTipPose.orientation.y;
-    targetTipPose_[5] = targetTipPose.orientation.z;
-    targetTipPose_[6] = targetTipPose.orientation.w;
+    targetTipPose_[3] = targetTipPose.orientation.w;
+    targetTipPose_[4] = targetTipPose.orientation.x;
+    targetTipPose_[5] = targetTipPose.orientation.y;
+    targetTipPose_[6] = targetTipPose.orientation.z;
 }
 vector<double>& ROSInterface::getTargetTipPose(){
     return targetTipPose_;

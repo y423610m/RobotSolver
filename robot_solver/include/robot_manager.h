@@ -28,6 +28,10 @@ private:
     bool _updateCobottaWithoutTool();
     bool _update6DOFArm();
 
+    //for Cobotta
+    vector<double> lastTargetTipPose_;
+    vector<double> currentTargetTipPose_;
+
 public:
     RobotManager(int RobotType);
     ~RobotManager();

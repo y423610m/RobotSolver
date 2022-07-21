@@ -139,5 +139,19 @@ namespace cvt{
         return retT;
     }
 
+    vector<double> fromTouchX2Cobotta(const vector<double> vec){
+        Eigen::Quaterniond quat(vec[3], vec[4], vec[5], vec[6]);
+        Eigen::Translation<double,3> trans(vec[0], vec[1], vec[2]);
+        Eigen::Affine3d aff = trans*quat*AngleAxisd(M_PI/2., Vector3d::UnitX());
+        vector<double> ret(6);
+        //position
+        for(int i=0;i<3;i++) ret[i] = aff(i,3);
+        //orientation
+        auto euler = aff.rotation().eulerAngles(0,1,2);
+        for(int i=0;i<3;i++) ret[i+3] = euler(i);
+        return ret;
+    }
+
+
 
 }

@@ -22,5 +22,6 @@ namespace cvt{
     Matrix4d toMat44TRFromDH(const DHParam& dh, const double& jointAngle);
     Matrix4d toMat44RTFromDH(const double& jointAngle, const DHParam& dh);
 
+    vector<double> fromTouchX2Cobotta(const vector<double> vec);
 
 }

@@ -1,6 +1,7 @@
 #include "robot_manager.h"
 #include "development_commands.h"
 #include "robot_type_definitions.h"
+#include "cvt_convert_functions.h"
 
 #include <thread>
 #include <chrono>
@@ -29,9 +30,6 @@ RobotManager::~RobotManager(){
 void RobotManager::update(){
     if(!initialized_) return;
 
-    vector<double> tmp(6,1e-8);
-    PL(solver_->FK(tmp))
-
     bool ok = false;
 
     if(RobotType_==RobotType_CobottaWithTool) ok = this->_updateCobottaWithTool();
@@ -53,10 +51,13 @@ bool RobotManager::_updateCobottaWithTool(){
 bool RobotManager::_updateCobottaWithoutTool(){
     if(ros_interface_->getActualJointPosition().size()==0) return false;
 
-    if(loopCnt_==0) solver_->setCurrentAngles(ros_interface_->getActualJointPosition());
+    if(loopCnt_==0){
+        solver_->setCurrentAngles(ros_interface_->getActualJointPosition());
+        targetJointAngles_ = solver_->FK(ros_interface_->getActualJointPosition());
+    }
 
  
-    if(IKCnt_==0){
+    if(false && IKCnt_==0){
 
         currentJointAngles_ = ros_interface_->getActualJointPosition();
         // solver_->setCurrentAngles(currentJointAngles_);
@@ -77,17 +78,22 @@ bool RobotManager::_updateCobottaWithoutTool(){
         //solver_->setTargetAngles(targetJointAngles_);
     }
 
-    if(1){
+    if(IKCnt_==0){
+
         //yzxQuat
-        targetTipPose_ = ros_interface_->getTargetTipPose();
-        /*
-            ->
-        */
-       PL(targetTipPose_)
+        currentTargetTipPose_ = cvt::fromTouchX2Cobotta(ros_interface_->getTargetTipPose());
+
+        //orientation
+        for(int i=3;i<6;i++) targetTipPose_[i] = currentTargetTipPose_[i];
+
+        //position
+        double scale = 1.0;
+        if(true) for(int i=0;i<3;i++)
+            targetTipPose_[i] += (currentTargetTipPose_[i]-lastTargetTipPose_[i]) * scale;
         
-
-
-
+        targetJointAngles_ = solver_->numericIK(targetTipPose_);
+        
+        lastTargetTipPose_ = currentTipPose_;
     }
 
     commandJointAngles_ = solver_->getCommandJointAngles();
