@@ -1,5 +1,6 @@
 #include "robot_manager.h"
 #include "development_commands.h"
+#include "robot_type_definitions.h"
 
 #include <thread>
 #include <chrono>
@@ -8,12 +9,11 @@
 #include <string>
 
 
-RobotManager::RobotManager()
-:ros_interface_(new ROSInterface())
-,solver_(new RobotSolver(ros_interface_->getParamInt(string("/cobotta_r/solver_node/RobotType"))))
+RobotManager::RobotManager(int RobotType)
+:ros_interface_(new ROSInterface(RobotType))
+,solver_(new RobotSolver(RobotType))
+,RobotType_(RobotType)
 {
-
-
     //  実機の関節角度でsolver初期化
     //solver_->setCurrentAngles(ros_interface_->getActualJointPosition());
 
@@ -28,20 +28,25 @@ RobotManager::~RobotManager(){
 
 void RobotManager::update(){
     if(!initialized_) return;
+
+    if(RobotType_==RobotType_CobottaWithTool) this->_updateCobottaWithTool();
+    if(RobotType_==RobotType_CobottaWithoutTool) this->_updateCobottaWithoutTool();
+    if(RobotType_==RobotType_6DOFArm) this->_update6DOFArm();
+
+    loopCnt_++;
+    IKCnt_++;
+    if(IKCnt_&IKPeriod_) IKCnt_=0;
+}
+
+void RobotManager::_updateCobottaWithTool(){
+
+}
+
+void RobotManager::_updateCobottaWithoutTool(){
     if(ros_interface_->getActualJointPosition().size()==0) return;
     if(loopCnt_==0) solver_->setCurrentAngles(ros_interface_->getActualJointPosition());
 
  
-    /*
-        IKPeriod_毎に現在角度取得＆目標角度をIK計算
-        Cobottaへの入力は、(dq/T) * (t-Tsin(t/T))
-        t = IKcnt, T = period
-        速度が(1-cos)になってcollision防げる？
-    */
-
-    //solver_->setCurrentAngles(vector<double>(nJoint_,0.1));
-
-
     if(IKCnt_==0){
         currentJointAngles_ = ros_interface_->getActualJointPosition();
         // solver_->setCurrentAngles(currentJointAngles_);
@@ -60,36 +65,24 @@ void RobotManager::update(){
         PS("com Pose") PL(solver_->FK(targetJointAngles_))
 
         //solver_->setTargetAngles(targetJointAngles_);
-
     }
 
+    commandJointAngles_ = solver_->getCommandJointAngles();
+    ros_interface_->publishCobottaWithoutTool(commandJointAngles_);
+    // PS(targetJointAngles_[0]) PL(commandJointAngles_[0])
+
+    /*
+        IKPeriod_毎に現在角度取得＆目標角度をIK計算
+        Cobottaへの入力は、(dq/T) * (t-Tsin(t/T))
+        t = IKcnt, T = period
+        速度が(1-cos)になってcollision防げる？
+    */
     // for(int i=0;i<nJoint_;i++) 
     //     commandJointAngles_[i] = (1.0*(targetJointAngles_[i]-currentJointAngles_[i])/IKPeriod_)
     //                                 *(1.0*IKCnt_-1.0*IKPeriod_*sin(1.0*(1+IKCnt_)/IKPeriod_));
+}
 
-
-
-    commandJointAngles_ = solver_->getCommandJointAngles();
-
-    ros_interface_->publishJointAngles(commandJointAngles_);
-
-    // PS(targetJointAngles_[0]) PL(commandJointAngles_[0])
-
-    // PL("----------result---------")
-    // EL(currentJointAngles_)
-    // EL(currentTipPose_)
-    // EL(targetJointAngles_)
-    // EL(targetTipPose_)
-
-    loopCnt_++;
-    IKCnt_++;
-
-    if(IKCnt_&IKPeriod_) IKCnt_=0;
-
-    return;
-
-
-    //gpio_->setMoterAngles(targetAngles, minAngles_, maxAngles_);
+void RobotManager::_update6DOFArm(){
 
 }
 

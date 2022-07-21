@@ -1,10 +1,10 @@
 #include "ros_interface.h"
+#include "robot_type_definitions.h"
 
-
-ROSInterface::ROSInterface(){
-    ros::NodeHandle nh;
-    jointAnglesPublisher_ = nh.advertise<std_msgs::Float64MultiArray>("arm_controller2/command", 1000);
-    jointAnglesSubscriber_ = nh.subscribe("/joint_states", 3, &ROSInterface::_getJointAnglesCB, this);
+ROSInterface::ROSInterface(int RobotType)
+:RobotType_(RobotType)
+{
+    if(RobotType==RobotType_CobottaWithoutTool) this->_initCobottaWithoutTool();
 }
 
 
@@ -12,40 +12,71 @@ ROSInterface::~ROSInterface(){
 
 }
 
-void ROSInterface::publishJointAngles(const vector<double>& jointAngles){
-    //size
-    if(jointAngles_.data.size()!=jointAngles.size()) jointAngles_.data.resize(jointAngles.size());
-
-    //set
-    for(int i=0;i<jointAngles.size();i++) jointAngles_.data[i] = jointAngles[i];
-
-    //pub
-    jointAnglesPublisher_.publish(jointAngles_);
-
+void ROSInterface::_initCobottaWithoutTool(){
+    ros::NodeHandle nh;
+    targetJointAnglesPublisher_ = nh.advertise<std_msgs::Float64MultiArray>("targetJointAngles", 2);
+    actualJointAnglesSubscriber_ = nh.subscribe("actualJointAngles", 2, &ROSInterface::_getActualJointAnglesCB, this);
+    targetTipPoseSubscriber_ = nh.subscribe("targetTipPose", 2, &ROSInterface::_getTargetTipPoseCB, this);
+    targetTipPose_.resize(7);
+}
+void ROSInterface::publishCobottaWithoutTool(const vector<double>& targetJointAngles){
+    // if(jointAngles_.data.size()!=jointAngles.size()) jointAngles_.data.resize(jointAngles.size());
+    targetJointAngles_.data = targetJointAngles;
+    targetJointAnglesPublisher_.publish(targetJointAngles_);
 }
 
 
-// void ROSInterface::_getJointAnglesCB(const sensor_msgs::JointState& JointState){
-void ROSInterface::_getJointAnglesCB(const sensor_msgs::JointState& jointState){
-    // if(jointPosition_.size()!=jointState.position.size()) jointPosition_.resize(jointState.position.size());
-    // for(int i=0;i<(int)jointState.position.size();i++) jointPosition_[i] = jointState.position[i];
-    jointPosition_ = jointState.position;
-}
 
+
+void ROSInterface::_getActualJointAnglesCB(const sensor_msgs::JointState& actualJointState){
+    actualJointAngles_ = actualJointState.position;
+}
 vector<double>& ROSInterface::getActualJointPosition(){
-    //jointPosition_ = vector<double>(6, 0.5);
-    return jointPosition_;
+    //actualJointAngles_ = vector<double>(6, 0.5);
+    return actualJointAngles_;
 }
 
-int ROSInterface::getParamInt(string ParamName){
-    int retVal=1;
-    nh_.getParam(ParamName, retVal);
-    return retVal;
+
+
+
+void ROSInterface::_getTargetTipPoseCB(const geometry_msgs::Pose& targetTipPose){
+    targetTipPose_[0] = targetTipPose.position.x;
+    targetTipPose_[1] = targetTipPose.position.y;
+    targetTipPose_[2] = targetTipPose.position.z;
+    targetTipPose_[3] = targetTipPose.orientation.x;
+    targetTipPose_[4] = targetTipPose.orientation.y;
+    targetTipPose_[5] = targetTipPose.orientation.z;
+    targetTipPose_[6] = targetTipPose.orientation.w;
+}
+vector<double>& ROSInterface::getTargetTipPose(){
+    return targetTipPose_;
 }
 
-template<typename T>
-T ROSInterface::getParam(string ParamName){
-    T retVal;
-    nh_.getParam(ParamName, retVal);
-    return retVal;    
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// int ROSInterface::getParamInt(string ParamName){
+//     int retVal=1;
+//     nh_.getParam(ParamName, retVal);
+//     return retVal;
+// }
+
+// template<typename T>
+// T ROSInterface::getParam(string ParamName){
+//     T retVal;
+//     nh_.getParam(ParamName, retVal);
+//     return retVal;    
+// }

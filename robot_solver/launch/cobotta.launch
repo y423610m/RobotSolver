@@ -1,9 +1,10 @@
 <launch>
     <group ns="cobotta_r">
         <node pkg="robot_solver" type="solver_node" name="solver_node">
-            <remap from="arm_controller2/command" to="arm_controller2/command"/>
+            <remap from="IK_ResultJointAngle" to="arm_controller2/command"/>
+            <remap from="ActualJointAngle" to="/joint_states"/>
             <param name="RobotType" value="2"/>
-            <rosparam command="load" file="$(find robot_solver)/config/CobottaDH.yaml"/>
+            <!-- <rosparam command="load" file="$(find robot_solver)/config/CobottaDH.yaml"/> -->
         </node>
     </group>
 </launch>

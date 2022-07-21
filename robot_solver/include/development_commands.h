@@ -22,3 +22,13 @@ ostream& operator<<(ostream& os, const vector<T>& vec){
     for(auto x: vec) os<<x<<" "; 
     return os;
 }
+
+template<typename T, typename U>
+void chmin(T& A, const U& B){
+    if(A>B) A=B;
+}
+
+template<typename T, typename U>
+void chmax(T& A, const U& B){
+    if(A<B) A=B;
+}

@@ -1,6 +1,7 @@
 #include "robot_solver.h"
 #include "development_commands.h"
 #include "cvt_convert_functions.h"
+#include "robot_type_definitions.h"
 
 #include <cassert>
 #include <cmath>
@@ -10,9 +11,8 @@
 
 
 RobotSolver::RobotSolver(int RobotType){
-    PS("RobotType" ) PL(RobotType)
-    if(RobotType==RobotType_CobottaWithTool) this->_initSpecificParamsCobottaArmAndTool();
-    if(RobotType==RobotType_CobottaWithoutTool) this->_initSpecificParamsCobottaArmOnly();
+    if(RobotType==RobotType_CobottaWithTool) this->_initSpecificParamsCobottaWithTool();
+    if(RobotType==RobotType_CobottaWithoutTool) this->_initSpecificParamsCobottaWithoutTool();
     if(RobotType==RobotType_6DOFArm) this->_initSpecificParams6dArm();
     this->_initCommon();
     initialized_ = true;
@@ -63,7 +63,7 @@ void RobotSolver::_initSpecificParams6dArm(){
     cerr<<"init for 6d arm"<<endl;
 }
 
-void RobotSolver::_initSpecificParamsCobottaArmOnly(){
+void RobotSolver::_initSpecificParamsCobottaWithoutTool(){
     nJoint_ = 6;
     //moters' Range [deg]
     minAngles_ = vector<double>(nJoint_, 0.);
@@ -84,11 +84,12 @@ void RobotSolver::_initSpecificParamsCobottaArmOnly(){
     DHs_.push_back({0.12, 270., 0.175, 0.}); //joint[6]->armTip
 
     jointMaxAccel_ = vector<double>(nJoint_, 5e-5);
+    jointMaxVelocity_ = vector<double>(nJoint_, 1e-3);
 
     cerr<<"init for cobotta without tip tool"<<endl;
 }
 
-void RobotSolver::_initSpecificParamsCobottaArmAndTool(){
+void RobotSolver::_initSpecificParamsCobottaWithTool(){
     nJoint_ = 7;
     //moters' Range [deg]
     minAngles_ = vector<double>(nJoint_, 0.);
@@ -130,8 +131,12 @@ void RobotSolver::_initCommon(){
         basePose_ = vector<double>(6, 0.0);
     }
     if((int)jointMaxAccel_.size()!=nJoint_){
-        PS("robotsolver") PS("jointMaxAccel_ not set") PL("set nJint*0.01")
-        jointMaxAccel_.resize(nJoint_, 0.01);
+        PS("robotsolver") PS("jointMaxAccel_ not set") PL("set nJint*1e-5")
+        jointMaxAccel_.resize(nJoint_, 1e-5);
+    }
+    if((int)jointMaxVelocity_.size()!=nJoint_){
+        PS("robotsolver") PS("jointMaxVelocity_ not set") PL("set nJint*1e-3")
+        jointMaxVelocity_.resize(nJoint_, 1e-3);
     }
 
     // deg -> rad
@@ -150,7 +155,6 @@ void RobotSolver::_initCommon(){
     Ti_ = vector<Matrix4d>(nJoint_+1);
     Ti_[0] = Tbase_ * cvt::toMat44FromDH(DHs_[0]);
     for(int i=0;i<nJoint_;i++) Ti_[i+1] = cvt::toMat44FromDH(DHs_[i+1]);
-    PL("bbb")
 
     currentJointAngles_.resize(nJoint_, 0.);
     targetJointAngles_ .resize(nJoint_, 0.);
@@ -165,8 +169,6 @@ void RobotSolver::_initCommon(){
 
 
     PS("robotsolver") PL("initCommon done")
-
-
 }
 
 
@@ -213,112 +215,15 @@ void RobotSolver::_calculateJ(){
     }
 }
 
-
-void RobotSolver::_redundantIK(const vector<double>& targetPose, int maxLoop){
-
-    Matrix<double, 6,1> targetX = cvt::toMat61XYZEuler(targetPose);
-
-    for(int loop=0; loop<maxLoop;loop++){
-
-        //J_
-        this->_calculateJ();
-
-        //    dq = J-1 * dx
-        Matrix<double, 6, 1> currentX = cvt::toMat61XYZEuler(Tfront_.back());
-        Matrix<double, 6, 1> dX = targetX - currentX;
-        for(int i=3;i<6;i++){
-            double& val = dX(i,0);
-            if(val>M_PI)  val-=2.0*M_PI;
-            if(val<-M_PI) val+=2.0*M_PI;
-        }
-
-        // dq = J-1 * dx        
-        dq_ = J_.transpose()*(J_*J_.transpose()).inverse()* dX;
-        double limit = 0.3 * (maxLoop-loop)/maxLoop + 0.2;
-        double dMax = 0.;
-        for(int i=0;i<nJoint_;i++){
-            double dAngle = max(min(dq_[i], limit), -limit);
-            targetJointAngles_[i] += dAngle;
-            dMax = max(dMax, abs(dAngle));
-        }
-
-        //    check angle range 
-        for(int i=0;i<nJoint_;i++){
-            // targetJointAngles_[i] = max(targetJointAngles_[i], minAngles_[i]);
-            // targetJointAngles_[i] = min(targetJointAngles_[i], maxAngles_[i]);
-            if(targetJointAngles_[i]<-M_PI) targetJointAngles_[i] += 2.0*M_PI;
-            if(targetJointAngles_[i]>M_PI) targetJointAngles_[i] -= 2.0*M_PI;
-        }
-        //ES(loop) EL(targetJointAngles_)
-        //EL(dMax)
-        if(dMax<eps) break;
-    }    
-
-
-}
-
-
-
-
-void RobotSolver::_uniqueIK(const vector<double>& targetPose, int maxLoop){
-
-    Matrix<double, 6,1> targetX = cvt::toMat61XYZEuler(targetPose);
-
-    for(int loop=0; loop<maxLoop;loop++){
-
-        //J_
-        this->_calculateJ();
-
-        //    dq = J-1 * dx
-        Matrix<double, 6, 1> currentX = cvt::toMat61XYZEuler(Tfront_.back());
-        Matrix<double, 6, 1> dX = targetX - currentX;
-        for(int i=3;i<6;i++){
-            double& val = dX(i,0);
-            if(val>M_PI)  val-=2.0*M_PI;
-            if(val<-M_PI) val+=2.0*M_PI;
-        }
-        dq_ = J_.inverse() * dX;
-
-        // q += dq
-        double limit = 0.4 * (maxLoop-loop)/maxLoop + 0.2;
-        double dMax = 0.;
-        for(int i=0;i<nJoint_;i++){
-            double dAngle = max(min(dq_[i], limit), -limit);
-            targetJointAngles_[i] += dAngle;
-            dMax = max(dMax, abs(dAngle));
-        }
-
-        //    check angle range 
-        for(int i=0;i<nJoint_;i++){
-            // targetJointAngles_[i] = max(targetJointAngles_[i], minAngles_[i]);
-            // targetJointAngles_[i] = min(targetJointAngles_[i], maxAngles_[i]);
-            if(targetJointAngles_[i]<-M_PI) targetJointAngles_[i] += 2.0*M_PI;
-            if(targetJointAngles_[i]>M_PI) targetJointAngles_[i] -= 2.0*M_PI;
-        }
-        //ES(loop) EL(targetJointAngles_)
-        if(dMax<eps) break;
-    }
-
-}
-
-void RobotSolver::_undeterminedIK(const vector<double>& targetPose){
-
-
-}
-
 // targetAngles.size() == always 6(x,y,z,ax,ay,az) [m, deg]
 // return size == nJoint [deg]
 vector<double> RobotSolver::numericIK(const vector<double>& targetPose, int maxLoop){
 
     // targetJointAngles_ = currentJointAngles_;
-    // if(nJoint_ == 6) this->_uniqueIK(targetPose);
-    // if(nJoint_ > 6) this->_redundantIK(targetPose);
-    // // else if(nJoint_ == 6){
-    // // else jointAngles = this->_undeterminedIK(targetPose);
 
     Matrix<double, 6,1> targetX = cvt::toMat61XYZEuler(targetPose);
 
-    for(int loop=0; loop<maxLoop;loop++){
+    for(int loop=0; loop<maxLoop; loop++){
 
         //J_
         this->_calculateJ();
@@ -341,9 +246,11 @@ vector<double> RobotSolver::numericIK(const vector<double>& targetPose, int maxL
         double limit = 0.4 * (maxLoop-loop)/maxLoop + 0.2;
         double dMax = 0.;
         for(int i=0;i<nJoint_;i++){
-            double dAngle = max(min(dq_[i], limit), -limit);
+            double dAngle = dq_[i];
+            chmin(dAngle, limit);
+            chmax(dAngle, -limit);
             targetJointAngles_[i] += dAngle;
-            dMax = max(dMax, abs(dAngle));
+            chmax(dMax, abs(dAngle));
         }
 
         //    check angle range 
@@ -354,32 +261,32 @@ vector<double> RobotSolver::numericIK(const vector<double>& targetPose, int maxL
             if(targetJointAngles_[i]>M_PI) targetJointAngles_[i] -= 2.0*M_PI;
         }
         //ES(loop) EL(targetJointAngles_)
-        //if(dMax<eps) break;
+        if(dMax<eps) break;
     }
 
     return targetJointAngles_;
 }
 
-bool RobotSolver::setCurrentAngles(const vector<double> currentAngles){
-    if(currentAngles.size()!=currentJointAngles_.size()) return false;
+void RobotSolver::setCurrentAngles(const vector<double> currentAngles){
+    //if(currentAngles.size()!=currentJointAngles_.size()) return false;
     currentJointAngles_ = currentAngles;
-    return true;
 }
 
-bool RobotSolver::setTargetAngles(const vector<double> targetAngles){
-    if(targetAngles.size()!=targetJointAngles_.size()) return false;
+void RobotSolver::setTargetAngles(const vector<double> targetAngles){
+    //if(targetAngles.size()!=targetJointAngles_.size()) return false;
     targetJointAngles_ = targetAngles;
-    return true;    
 }
 
 
 vector<double> RobotSolver::getCommandJointAngles(){
     for(int i=0;i<nJoint_;i++){
         double dVelocity = Gp_*(targetJointAngles_[i] - currentJointAngles_[i]) + Gd_*(0. - jointVelocity_[i]);
-        dVelocity = min(dVelocity,  jointMaxAccel_[i]);
-        dVelocity = max(dVelocity, -jointMaxAccel_[i]);
+        chmin(dVelocity,  jointMaxAccel_[i]);
+        chmax(dVelocity, -jointMaxAccel_[i]);
         
         jointVelocity_[i] += dVelocity;
+        chmin(jointVelocity_[i], jointMaxVelocity_[i]);
+        chmax(jointVelocity_[i], -jointMaxVelocity_[i]);
 
         currentJointAngles_[i] += jointVelocity_[i];
     }

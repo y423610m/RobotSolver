@@ -10,12 +10,9 @@ using namespace std;
 class RobotManager{
 private:
     bool initialized_ = false;
+    int RobotType_ = -1;
     unique_ptr<ROSInterface> ros_interface_;
     unique_ptr<RobotSolver> solver_;
-
-    // int nJoint_ = -1;
-    // vector<double> minAngles_;
-    // vector<double> maxAngles_;
 
     vector<double> currentJointAngles_;
     vector<double> currentTipPose_;
@@ -27,10 +24,12 @@ private:
     int IKCnt_ = 0;
     int IKPeriod_ = 128;
 
-
+    void _updateCobottaWithTool();
+    void _updateCobottaWithoutTool();
+    void _update6DOFArm();
 
 public:
-    RobotManager();
+    RobotManager(int RobotType);
     ~RobotManager();
     void update();
     bool checkLoop();

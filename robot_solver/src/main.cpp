@@ -22,8 +22,13 @@ int main(int argc, char** argv){
     //     ROS_WARN("%lf", double(DHs[i]["alp"]));
     // }
 
+    int RobotType = -1;
+    nh.getParam(ros::this_node::getNamespace()+ros::this_node::getName()+"RobotType", RobotType);
+    //if(RobotType<=0) return 0;
+    RobotType = 2;
+    EL(RobotType)
 
-    unique_ptr<RobotManager> robot_manager_(new RobotManager());
+    unique_ptr<RobotManager> robot_manager_(new RobotManager(RobotType));
 
     ros::Rate loop_rate(128);
     while(ros::ok()&&robot_manager_->checkLoop()){
