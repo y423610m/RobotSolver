@@ -54,6 +54,7 @@ bool RobotManager::_updateCobottaWithoutTool(){
 
  
     if(IKCnt_==0){
+
         currentJointAngles_ = ros_interface_->getActualJointPosition();
         // solver_->setCurrentAngles(currentJointAngles_);
         // currentTipPose_ = solver_->FK(currentJointAngles_);
@@ -71,6 +72,19 @@ bool RobotManager::_updateCobottaWithoutTool(){
         PS("com Pose") PL(solver_->FK(targetJointAngles_))
 
         //solver_->setTargetAngles(targetJointAngles_);
+    }
+
+    if(1){
+        //yzxQuat
+        targetTipPose_ = ros_interface_->getTargetTipPose();
+        /*
+            ->
+        */
+       PL(targetTipPose_)
+        
+
+
+
     }
 
     commandJointAngles_ = solver_->getCommandJointAngles();
