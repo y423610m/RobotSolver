@@ -77,10 +77,10 @@ void RobotSolver::_initSpecificParamsCobottaWithoutTool(){
     //*******  set tht as every Joint are 0 ***********
     DHs_.push_back({0., 0., 0.175, 0.}); //base=>joint[0]
     DHs_.push_back({0., 270., 0., 270.}); //joint[0]->joint[1]
-    DHs_.push_back({0.17, 180., -0.02, 90.}); ////////////////////////last 0->90!!!
-    DHs_.push_back({0.01, 90., 0.175, 0.}); //dummy3->dummy4
-    DHs_.push_back({0., 270., 0.064, 0.});
-    DHs_.push_back({0., 90., 0.0598, 0.});
+    DHs_.push_back({0.17, 0., -0.02, 90.}); ////////////////////////last 0->90!!!
+    DHs_.push_back({0.01, 270., 0.175, 0.}); //dummy3->dummy4
+    DHs_.push_back({0., 90., -0.064, 0.});
+    DHs_.push_back({0., 270., 0.0598, 0.});
     DHs_.push_back({0.012, 270., 0.175, 0.}); //joint[6]->armTip
 
     jointMaxAccel_ = vector<double>(nJoint_, 5e-5);
