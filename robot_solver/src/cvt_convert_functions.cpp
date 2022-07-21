@@ -143,7 +143,6 @@ namespace cvt{
         vector<double> ret(6);
         ret[0] = vec[0]; ret[1] = -vec[2]; ret[2] = vec[1];
 
-
         Eigen::Quaterniond quat(vec[3], vec[4], vec[5], vec[6]);
         auto res = quat*AngleAxisd(M_PI/2., Vector3d::UnitX());
         auto euler = res.matrix().eulerAngles(0,1,2);

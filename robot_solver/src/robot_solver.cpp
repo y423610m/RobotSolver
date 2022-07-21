@@ -66,22 +66,23 @@ void RobotSolver::_initSpecificParams6dArm(){
 void RobotSolver::_initSpecificParamsCobottaWithoutTool(){
     nJoint_ = 6;
     //moters' Range [deg]
-    minAngles_ = vector<double>(nJoint_, 0.);
-    maxAngles_ = vector<double>(nJoint_, 180.);
+    minAngles_ = vector<double>{-150., -60.,   18., -170., -95., -170.,};
+    maxAngles_ = vector<double>{ 150., 100.,  140.,  170., 135.,  170.};
 
 
     //global origin to base. dx,dy,dz,dax,day,daz [m, deg]
-    basePose_ = {-0.25, -0.23, 0., 0., 0., 90.};
+    // basePose_ = {-0.25, -0.23, 0., 0., 0., 90.};
+    basePose_ = {0., 0., 0., 0., 0., 90.};
 
     //set DH Parameters {a, alp, d, tht} [m, deg]
     //*******  set tht as every Joint are 0 ***********
-    DHs_.push_back({0., 0., 0.175, 0.}); //base=>joint[0]
-    DHs_.push_back({0., 270., 0., 270.}); //joint[0]->joint[1]
-    DHs_.push_back({0.17, 0., -0.02, 90.}); ////////////////////////last 0->90!!!
-    DHs_.push_back({0.01, 270., 0.175, 0.}); //dummy3->dummy4
-    DHs_.push_back({0., 90., -0.064, 0.});
-    DHs_.push_back({0., 270., 0.0598, 0.});
-    DHs_.push_back({0.012, 270., 0.175, 0.}); //joint[6]->armTip
+    DHs_.push_back({   0.,   0.,    0.18,   0.}); //base=>joint[0]
+    DHs_.push_back({   0., 270.,      0., 270.}); //joint[0]->joint[1]
+    DHs_.push_back({0.165,   0.,   -0.02, 270.}); ////////////////////////last 0->90!!!
+    DHs_.push_back({0.012, 270.,  0.1775,   0.}); //dummy3->dummy4
+    DHs_.push_back({   0.,  90., -0.0645,   0.});
+    DHs_.push_back({   0., 270., 0.0385+0,  0.});
+    DHs_.push_back({0.012, 270.,   0.175,   0.}); //joint[6]->armTip
 
     jointMaxAccel_ = vector<double>(nJoint_, 5e-5);
     jointMaxVelocity_ = vector<double>(nJoint_, 1e-3);
@@ -178,10 +179,10 @@ vector<double> RobotSolver::FK(const vector<double>& jointAngles){
     //Tfrom base to Tip
     Matrix4d Tb2t = Ti_[0];
     // for(int i=0;i<nJoint_;i++) Tb2t *= cvt::toMat44RotZ(jointAngles[i])*Ti_[i+1];
-    //PL(0) PL(Tb2t)
+    PL(0) PL(Tb2t)
     for(int i=0;i<nJoint_;i++){
         Tb2t *= cvt::toMat44RTFromDH(jointAngles[i], DHs_[i+1]);
-      //  PL(i+1) PL(Tb2t)
+        PL(i+1) PL(Tb2t)
     }
     vector<double> tipPose = cvt::toVecXYZEuler(Tb2t);
     return tipPose;

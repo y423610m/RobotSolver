@@ -20,6 +20,11 @@ RobotManager::RobotManager(int RobotType)
 
     initialized_ = true;
     cout<<"RobotManager constructed"<<endl;
+
+    vector<double> tmp(6);
+    tmp[2] = M_PI/2;
+
+    PL(solver_->FK(tmp))
 }
 
 RobotManager::~RobotManager(){
@@ -30,8 +35,9 @@ RobotManager::~RobotManager(){
 void RobotManager::update(){
     if(!initialized_) return;
 
-    if(ros_interface_->getActualJointPosition().size()!=0)
-        PL(solver_->FK(ros_interface_->getActualJointPosition()))
+
+
+    return;
 
     bool ok = false;
 
@@ -87,7 +93,7 @@ bool RobotManager::_updateCobottaWithoutTool(){
         currentTargetTipPose_ = cvt::fromTouchX2Cobotta(ros_interface_->getTargetTipPose());
 
         //orientation
-        for(int i=3;i<6;i++) targetTipPose_[i] = currentTargetTipPose_[i];
+        //for(int i=3;i<6;i++) targetTipPose_[i] = currentTargetTipPose_[i];
 
         if(lastTargetTipPose_.size()){
             //position
@@ -97,8 +103,13 @@ bool RobotManager::_updateCobottaWithoutTool(){
             
         }
         targetJointAngles_ = solver_->numericIK(targetTipPose_);
-        
         lastTargetTipPose_ = currentTargetTipPose_;
+
+        if(ros_interface_->getActualJointPosition().size()!=0) PL(solver_->FK(ros_interface_->getActualJointPosition()))
+        EL(targetJointAngles_)
+        EL(solver_->FK(targetJointAngles_))
+        EL(targetTipPose_)
+        PL("")
     }
 
     vector<double> tmp(6);
