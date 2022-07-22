@@ -21,10 +21,10 @@ RobotManager::RobotManager(int RobotType)
     initialized_ = true;
     cout<<"RobotManager constructed"<<endl;
 
-    vector<double> tmp(6);
-    tmp[2] = M_PI/2;
+    // vector<double> tmp(6);
+    // tmp[2] = M_PI/2;
 
-    PL(solver_->FK(tmp))
+    // PL(solver_->FK(tmp))
 }
 
 RobotManager::~RobotManager(){
@@ -37,7 +37,7 @@ void RobotManager::update(){
 
 
 
-    return;
+    // return;
 
     bool ok = false;
 
@@ -112,9 +112,9 @@ bool RobotManager::_updateCobottaWithoutTool(){
         PL("")
     }
 
-    vector<double> tmp(6);
-    tmp[2] = 1.5;
-    solver_->setTargetAngles(tmp);
+    // vector<double> tmp(6);
+    // tmp[2] = 1.5;
+    // solver_->setTargetAngles(tmp);
 
     commandJointAngles_ = solver_->getCommandJointAngles();
     ros_interface_->publishCobottaWithoutTool(commandJointAngles_);

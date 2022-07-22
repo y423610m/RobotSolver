@@ -87,28 +87,36 @@ void RobotSolver::_initSpecificParamsCobottaWithoutTool(){
     jointMaxAccel_ = vector<double>(nJoint_, 5e-5);
     jointMaxVelocity_ = vector<double>(nJoint_, 1e-3);
 
+    Gp_ = 0.00035;
+    Gd_ = 0.08;
+
     cerr<<"init for cobotta without tip tool"<<endl;
 }
 
 void RobotSolver::_initSpecificParamsCobottaWithTool(){
     nJoint_ = 7;
     //moters' Range [deg]
-    minAngles_ = vector<double>(nJoint_, 0.);
-    maxAngles_ = vector<double>(nJoint_, 180.);
+    minAngles_ = vector<double>{-150., -60.,   18., -170., -95., -170., -360.};
+    maxAngles_ = vector<double>{ 150., 100.,  140.,  170., 135.,  170.,  360.};
 
     //global origin to base. dx,dy,dz,dax,day,daz [m, deg]
     basePose_ = {-0.25, -0.23, 0., 0., 0., 90.};
 
     //set DH Parameters {a, alp, d, tht} [m, deg]
-    //*******  set tht as every Joint are 0 ***********
-    DHs_.push_back({0., 0., 0.175, 0.}); //base=>joint[0]
-    DHs_.push_back({0., 270., 0., 270.}); //joint[0]->joint[1]
-    DHs_.push_back({0.17, 180., -0.02, 0.}); 
-    DHs_.push_back({0.01, 90., 0.175, 0.}); //dummy3->dummy4
-    DHs_.push_back({0., 270., 0.064, 0.});
-    DHs_.push_back({0., 90., 0.0598, 0.});
-    DHs_.push_back({0., 270., 0.09, 0.}); //joint[6]->toolJoint
-    DHs_.push_back({0.012, 0., 0.085, 0.}); //toolJolint->armTip
+    DHs_.push_back({   0.,   0.,    0.18,   0.}); //base=>joint[0]
+    DHs_.push_back({   0., 270.,      0., 270.}); //joint[0]->joint[1]
+    DHs_.push_back({0.165,   0.,   -0.02, 270.}); ////////////////////////last 0->90!!!
+    DHs_.push_back({0.012, 270.,  0.1775,   0.}); //dummy3->dummy4
+    DHs_.push_back({   0.,  90., -0.0645,   0.});
+    DHs_.push_back({   0., 270., 0.0385+0,  0.});
+    DHs_.push_back({   0., 270.,    0.09,   0.}); //joint[6]->toolJoint
+    DHs_.push_back({0.012,   0.,   0.085,   0.}); //toolJolint->armTip
+
+    jointMaxAccel_ = vector<double>(nJoint_, 5e-5);
+    jointMaxVelocity_ = vector<double>(nJoint_, 1e-3);
+
+    Gp_ = 0.00035;
+    Gd_ = 0.08;
 
     cerr<<"init for cobotta including tip tool"<<endl;
 }
@@ -247,6 +255,8 @@ vector<double> RobotSolver::numericIK(const vector<double>& targetPose, int maxL
         if(nJoint_==6) dq_ = J_.inverse() * dX * G;
         else if(nJoint_>6) dq_ = J_.transpose()*(J_*J_.transpose()).inverse()* dX * G;
 
+        dq_ = J_.transpose()*(J_*J_.transpose()).inverse()* dX * G;
+
         // q += dq
         double limit = 0.4 * (maxLoop-loop)/maxLoop + 0.2;
         double dMax = 0.;
@@ -264,6 +274,11 @@ vector<double> RobotSolver::numericIK(const vector<double>& targetPose, int maxL
             // targetJointAngles_[i] = min(targetJointAngles_[i], maxAngles_[i]);
             if(targetJointAngles_[i]<-M_PI) targetJointAngles_[i] += 2.0*M_PI;
             if(targetJointAngles_[i]>M_PI) targetJointAngles_[i] -= 2.0*M_PI;
+
+            chmin(targetJointAngles_[i], maxAngles_[i]);
+            chmax(targetJointAngles_[i], minAngles_[i]);
+
+
         }
         //ES(loop) EL(targetJointAngles_)
         if(dMax<eps) break;

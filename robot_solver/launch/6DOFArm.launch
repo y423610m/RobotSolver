@@ -1,0 +1,10 @@
+<launch>
+    <group ns="6DOFArm">
+        <node pkg="robot_solver" type="solver_node" name="solver_node">
+            <remap from="targetJointAngles" to="targetJointAngles"/>
+            <remap from="targetTipPose" to="targetTipPose"/>
+            <param name="RobotType" value="4"/>
+            <!-- <rosparam command="load" file="$(find robot_solver)/config/CobottaDH.yaml"/> -->
+        </node>
+    </group>
+</launch>

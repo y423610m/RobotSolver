@@ -4,11 +4,29 @@
 ROSInterface::ROSInterface(int RobotType)
 :RobotType_(RobotType)
 {
+    if(RobotType==RobotType_CobottaWithTool) this->_initCobottaWithTool();
     if(RobotType==RobotType_CobottaWithoutTool) this->_initCobottaWithoutTool();
+    if(RobotType==RobotType_6DOFArm) this->_init6DOFArm();
 }
 
 
 ROSInterface::~ROSInterface(){
+
+}
+
+void ROSInterface::_initCobottaWithTool(){
+    ros::NodeHandle nh;
+    targetJointAnglesPublisher_ = nh.advertise<std_msgs::Float64MultiArray>("targetJointAngles", 2);
+    actualJointAnglesSubscriber_ = nh.subscribe("actualJointAngles", 2, &ROSInterface::_getActualJointAnglesCB, this);
+    targetTipPoseSubscriber_ = nh.subscribe("targetTipPose", 2, &ROSInterface::_getTargetTipPoseCB, this);
+    targetTipPose_.resize(7);
+}
+void ROSInterface::publishCobottaWithTool(const vector<double>& targetJointAngles, double toolAngle){
+    // if(jointAngles_.data.size()!=jointAngles.size()) jointAngles_.data.resize(jointAngles.size());
+    targetJointAngles_.data = targetJointAngles;
+    targetJointAngles_.data.pop_back();
+    targetJointAnglesPublisher_.publish(targetJointAngles_);
+    //tool
 
 }
 
@@ -25,6 +43,21 @@ void ROSInterface::publishCobottaWithoutTool(const vector<double>& targetJointAn
     targetJointAnglesPublisher_.publish(targetJointAngles_);
 }
 
+void ROSInterface::_init6DOFArm(){
+    ros::NodeHandle nh;
+    targetJointAnglesPublisher_ = nh.advertise<std_msgs::Float64MultiArray>("targetJointAngles", 2);
+    targetTipPoseSubscriber_ = nh.subscribe("targetTipPose", 2, &ROSInterface::_getTargetTipPoseCB, this);
+    targetTipPose_.resize(7);
+}
+void ROSInterface::publish6DOFArm(const vector<double>& targetJointAngles, double toolAngle){
+    targetJointAngles_.data = targetJointAngles;
+    targetJointAngles_.data.push_back(toolAngle);
+    targetJointAnglesPublisher_.publish(targetJointAngles_);
+}
+
+
+
+
 
 
 
@@ -35,9 +68,6 @@ vector<double>& ROSInterface::getActualJointPosition(){
     //actualJointAngles_ = vector<double>(6, 0.5);
     return actualJointAngles_;
 }
-
-
-
 
 void ROSInterface::_getTargetTipPoseCB(const geometry_msgs::Pose& targetTipPose){
     targetTipPose_[0] = targetTipPose.position.x;

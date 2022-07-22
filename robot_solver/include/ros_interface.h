@@ -22,13 +22,20 @@ private:
     vector<double> targetTipPose_;
     void _getTargetTipPoseCB(const geometry_msgs::Pose& targetTipPose);
 
+    // ros::Subscriber clutchStateSubscriber_;
+    // int clutchState_;
+
+    void _initCobottaWithTool();
     void _initCobottaWithoutTool();
+    void _init6DOFArm();
 
 public:
     ROSInterface(int RobotType);
     ~ROSInterface();
 
+    void publishCobottaWithTool(const vector<double>& jointAngles, double toolAngle);
     void publishCobottaWithoutTool(const vector<double>& jointAngles);
+    void publish6DOFArm(const vector<double>& jointAngles, double toolAngle);
 
     vector<double>& getActualJointPosition();
     vector<double>& getTargetTipPose();

@@ -65,7 +65,7 @@ public:
     ~RobotSolver();
 
     vector<double> FK(const vector<double>& jointAngles);
-    vector<double> numericIK(const vector<double>& targetPose, int maxLoop=100);
+    vector<double> numericIK(const vector<double>& targetPose, int maxLoop=30);
     vector<double> getCommandJointAngles();
 
 
