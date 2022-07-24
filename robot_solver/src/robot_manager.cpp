@@ -93,7 +93,7 @@ bool RobotManager::_updateCobottaWithoutTool(){
         currentTargetTipPose_ = cvt::fromTouchX2Cobotta(ros_interface_->getTargetTipPose());
 
         //orientation
-        //for(int i=3;i<6;i++) targetTipPose_[i] = currentTargetTipPose_[i];
+        for(int i=3;i<6;i++) targetTipPose_[i] = currentTargetTipPose_[i];
 
         if(lastTargetTipPose_.size()){
             //position
@@ -118,6 +118,7 @@ bool RobotManager::_updateCobottaWithoutTool(){
 
     commandJointAngles_ = solver_->getCommandJointAngles();
     ros_interface_->publishCobottaWithoutTool(commandJointAngles_);
+    // ros_interface_->publishCobottaWithoutTool(targetJointAngles_);
     // PS(targetJointAngles_[0]) PL(commandJointAngles_[0])
 
     /*

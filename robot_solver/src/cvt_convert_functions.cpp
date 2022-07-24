@@ -144,9 +144,22 @@ namespace cvt{
         ret[0] = vec[0]; ret[1] = -vec[2]; ret[2] = vec[1];
 
         Eigen::Quaterniond quat(vec[3], vec[4], vec[5], vec[6]);
-        auto res = quat*AngleAxisd(M_PI/2., Vector3d::UnitX());
-        auto euler = res.matrix().eulerAngles(0,1,2);
+        auto R = quat.toRotationMatrix();//*AngleAxisd(M_PI/2., Vector3d::UnitX());
+
+        double a,b,c;
+        b = asin(R(0,2));
+        if(cos(b)==0.0){
+            a = atan2(R(2,1), R(1,1));
+            c = 0.;
+        }
+        else{
+            a = atan2(-R(1,2), R(2,2));
+            c = atan2(-R(0,1), R(0,0));
+        }
+
+        auto euler = R.eulerAngles(0,1,2);
         for(int i=0;i<3;i++) ret[i+3] = euler(i);
+        ret[3] = a, ret[4]=b, ret[5]=c;
         return ret;
     }
 
