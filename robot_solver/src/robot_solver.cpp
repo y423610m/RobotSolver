@@ -196,10 +196,10 @@ vector<double> RobotSolver::FK(const vector<double>& jointAngles){
     //Tfrom base to Tip
     Matrix4d Tb2t = Ti_[0];
     // for(int i=0;i<nJoint_;i++) Tb2t *= cvt::toMat44RotZ(jointAngles[i])*Ti_[i+1];
-    PL(0) PL(Tb2t)
+    //PL(0) PL(Tb2t)
     for(int i=0;i<nJoint_;i++){
         Tb2t *= cvt::toMat44RTFromDH(jointAngles[i], DHs_[i+1]);
-        PL(i+1) PL(Tb2t)
+        //PL(i+1) PL(Tb2t)
     }
     Tb2t *= Ttip_;
     vector<double> tipPose = cvt::toVecXYZEuler(Tb2t);
@@ -263,8 +263,8 @@ vector<double> RobotSolver::numericIK(const vector<double>& targetPose, int maxL
 
         double G = 0.5;
 
-        if(nJoint_==6) dq_ = J_.inverse() * dX * G;
-        else if(nJoint_>6) dq_ = J_.transpose()*(J_*J_.transpose()).inverse()* dX * G;
+        //if(nJoint_==6) dq_ = J_.inverse() * dX * G;
+        //else if(nJoint_>6) dq_ = J_.transpose()*(J_*J_.transpose()).inverse()* dX * G;
 
         dq_ = J_.transpose()*(J_*J_.transpose()).inverse()* dX * G;
 
