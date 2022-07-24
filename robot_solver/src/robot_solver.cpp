@@ -82,7 +82,9 @@ void RobotSolver::_initSpecificParamsCobottaWithoutTool(){
     DHs_.push_back({0.012, 270.,  0.1775,   0.}); //dummy3->dummy4
     DHs_.push_back({   0.,  90., -0.0645,   0.});
     DHs_.push_back({   0., 270., 0.0385+0,  0.});
-    DHs_.push_back({0.012, 270.,   0.175,   0.}); //joint[6]->armTip
+    DHs_.push_back({0.012, 270.,   0.175,   0.}); //joint[6]->armTi
+
+    tipPose_ = {0., 0., 0., 90., 0., 0.};
 
     jointMaxAccel_ = vector<double>(nJoint_, 5e-5);
     jointMaxVelocity_ = vector<double>(nJoint_, 1e-3);
@@ -160,10 +162,17 @@ void RobotSolver::_initCommon(){
                 * AngleAxisd(basePose_[4], Vector3d::UnitY())
                 * AngleAxisd(basePose_[5], Vector3d::UnitZ());
     for(int i=0;i<4;i++) for(int j=0;j<4;j++) Tbase_(i,j) = aff(i,j);
+
+    aff = Eigen::Translation<double,3>(tipPose_[0], tipPose_[1], tipPose_[2])
+                * AngleAxisd(tipPose_[3], Vector3d::UnitX())
+                * AngleAxisd(tipPose_[4], Vector3d::UnitY())
+                * AngleAxisd(tipPose_[5], Vector3d::UnitZ());
+    for(int i=0;i<4;i++) for(int j=0;j<4;j++) Ttip_(i,j) = aff(i,j);
  
     Ti_ = vector<Matrix4d>(nJoint_+1);
     Ti_[0] = Tbase_ * cvt::toMat44FromDH(DHs_[0]);
     for(int i=0;i<nJoint_;i++) Ti_[i+1] = cvt::toMat44FromDH(DHs_[i+1]);
+    Ti_.back() *= Ttip_;
 
     currentJointAngles_.resize(nJoint_, 0.);
     targetJointAngles_ .resize(nJoint_, 0.);
@@ -192,6 +201,7 @@ vector<double> RobotSolver::FK(const vector<double>& jointAngles){
         Tb2t *= cvt::toMat44RTFromDH(jointAngles[i], DHs_[i+1]);
         PL(i+1) PL(Tb2t)
     }
+    Tb2t *= Ttip_;
     vector<double> tipPose = cvt::toVecXYZEuler(Tb2t);
     return tipPose;
 }
@@ -206,6 +216,7 @@ void RobotSolver::_calculateJ(){
     //T = T*RT
     // for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RotZ(currentJointAngles_[i]) * Ti_[i+1];
     for(int i=0;i<nJoint_;i++) Tfront_[i+1] = Tfront_[i] * cvt::toMat44RTFromDH(targetJointAngles_[i], DHs_[i+1]);
+    Tfront_.back() *= Ttip_;
     // TR * T
     // for(int i=nJoint_-1;i>=0;i--) Tback_[i] = Ti_[i] * cvt::toMat44RotZ(currentJointAngles_[i]) * Tback_[i+1];
     for(int i=nJoint_-1;i>=0;i--) Tback_[i] = cvt::toMat44TRFromDH(DHs_[i], targetJointAngles_[i]) * Tback_[i+1];

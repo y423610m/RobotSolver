@@ -29,6 +29,8 @@ private:
     vector<DHParam> DHs_;
     vector<double> basePose_;
     Matrix4d Tbase_;
+    vector<double> tipPose_;
+    Matrix4d Ttip_;
     vector<Matrix4d> Ti_;
 
 
