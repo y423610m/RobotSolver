@@ -115,7 +115,7 @@ void RobotSolver::_initSpecificParamsCobottaWithTool(){
     DHs_.push_back({0.012,   0.,   0.085,   0.}); //toolJolint->armTip
 
     jointMaxAccel_ = vector<double>(nJoint_, 5e-5);
-    jointMaxVelocity_ = vector<double>(nJoint_, 1e-3);
+    jointMaxVelocity_ = vector<double>(nJoint_, 1e-4);
 
     Gp_ = 0.00035;
     Gd_ = 0.08;
